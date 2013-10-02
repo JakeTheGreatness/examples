@@ -1,0 +1,32 @@
+#if !defined(SLISTH)
+#  define SLISTH
+
+/*
+ *  single linked list implementation.
+ */
+
+
+class element
+{
+ public:
+  element *next;
+  int      data;
+};
+
+class slist
+{
+ private:
+  element *head_element;
+  
+ public:
+  slist (void);
+  ~slist (void);
+  slist empty (void);
+  bool  is_empty ();
+  slist cons (int i);
+  int   head (void);
+  slist tail (void);
+};
+
+
+#endif

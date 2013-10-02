@@ -1,0 +1,5 @@
+
+all: force
+	g++ -g -O0 -I. slist.cc
+
+force:
