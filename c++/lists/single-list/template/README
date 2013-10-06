@@ -1,0 +1,3 @@
+In this directory we implement the same list routines as in
+examples/c++/lists/single-list/int but we do it using a template
+solution.
