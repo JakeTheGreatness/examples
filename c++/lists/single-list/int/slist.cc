@@ -34,6 +34,13 @@ slist::~slist (void)
 }
 
 
+/*
+ *  delete_elements - delete all elements specified by, h.
+ *                    pre-condition:  h points to a list of elements.
+ *                    post-condition: zero is returned and all elements are
+ *                                    deleted.
+ */
+
 element *slist::delete_elements (element *h)
 {
   while (h != 0) {
@@ -46,6 +53,13 @@ element *slist::delete_elements (element *h)
   }
   return 0;
 }
+
+
+/*
+ *  duplicate_elements - return a copy of all elements found in, e.
+ *                       pre-condition:  e points to a list of elements.
+ *                       post-condition: a duplicate list is returned.
+ */
 
 element *slist::duplicate_elements (element *e)
 {
@@ -168,4 +182,23 @@ slist slist::tail (void)
   else
     delete e;
   return *this;
+}
+
+
+std::ostream& operator<< (std::ostream& os, const slist& l)
+{
+  element *e = l.head_element;
+  bool seen = false;
+
+  os << "[";
+  while (e != 0)
+    {
+      if (seen)
+	os << ", ";
+      os << e->data;
+      e = e->next;
+      seen = true;
+    }
+  os << "]";
+  return os;
 }

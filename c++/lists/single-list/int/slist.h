@@ -1,6 +1,8 @@
 #if !defined(SLISTH)
 #  define SLISTH
 
+#include <iostream>
+
 /*
  *  single linked list implementation.
  */
@@ -19,6 +21,7 @@ class slist
   element *head_element;
   element *duplicate_elements (element *e);  
   element *delete_elements (element *h);
+  friend std::ostream& operator<< (std::ostream& os, const slist& l);
 
  public:
   slist (void);
@@ -27,11 +30,10 @@ class slist
   slist& operator= (const slist &from);
   
   slist empty (void);
-  bool  is_empty ();
+  bool  is_empty (void);
   slist cons (int i);
   int   head (void);
   slist tail (void);
 };
-
 
 #endif
