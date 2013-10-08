@@ -185,6 +185,12 @@ slist slist::tail (void)
 }
 
 
+/*
+ *   operator<<  - shift left (output) operator.
+ *                 pre-condition :  an initialised list.
+ *                 post-condition:  list printed and stream returned.
+ */
+
 std::ostream& operator<< (std::ostream& os, const slist& l)
 {
   element *e = l.head_element;

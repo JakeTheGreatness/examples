@@ -1,5 +1,25 @@
 #include <fract.h>
 #include <cassert>
+#include <cstdio>
+
+
+/*
+ *  gcd - Euclid's Greatest Common Denominator algorithm.
+ *        pre-condition :  x and y are both >0
+ *        post-condition:  return the greatest denominator of, x, and, y.
+ */
+   
+longcard gcd (longcard x, longcard y)
+{
+  while (x != y)
+    {
+      if (x > y)
+	x -= y;
+      else
+	y -= x;
+    }
+  return x;
+}
 
 
 /*
@@ -9,14 +29,13 @@
  */
 
 fract::fract (void)
-  : unknown(true), positive(true), dirty(false), whole(0), num(0), demon(0)
+  : positive(true), dirty(false), whole(0), num(0), denom(0)
 {
 }
 
 
 fract::~fract (void)
 {
-  unknown = true;
 }
 
 
@@ -24,9 +43,13 @@ fract::~fract (void)
  *  fract - the copy operator.
  */
 
-fract fract::fract (const fract &from)
+fract::fract (const fract &from)
 {
-  this = from;
+  this->positive = from.positive;
+  this->dirty = from.dirty;
+  this->whole = from.whole;
+  this->num = from.num;
+  this->denom = from.denom;
 }
 
 
@@ -34,9 +57,42 @@ fract fract::fract (const fract &from)
  *  fract - the assignment operator.
  */
 
-fract fract::fract& operator= (const fract &from)
+fract& fract::operator= (const fract &from)
 {
-  this = from;
+  this->positive = from.positive;
+  this->dirty = from.dirty;
+  this->whole = from.whole;
+  this->num = from.num;
+  this->denom = from.denom;
+}
+
+
+/*
+ *  fract - construct a fract representing whole number, value.
+ */
+
+fract::fract (longcard value)
+{
+  positive = true;
+  dirty = false;
+  whole = value;
+  num = 0;
+  denom = 0;
+}
+
+
+/*
+ *  fract - construct a fract representing n/d.
+ */
+
+fract::fract (longcard n, longcard d)
+{
+  positive = true;
+  dirty = (n != 0);
+  whole = 0;
+  num = n;
+  denom = d;
+  this->simplify();
 }
 
 
@@ -44,47 +100,25 @@ fract fract::fract& operator= (const fract &from)
  *  fract - assign a whole number to the fractional datatype.
  */
 
-fract fract::fract (int value)
+fract::fract (int value)
 {
-  return fract ((longint) value);
+  *this = fract ((longcard) value);
 }
 
 
 /*
- *  fract -
+ *  fract - construct a fract representing n/d.
  */
 
-fract fract::fract (longint value)
+fract::fract (int n, int d)
 {
-  unknown = false;
-  positive = true;
-  dirty = false;
-  whole = value;
-  num = 0;
-  demon = 0;
+  *this = fract ((longcard) n, (longcard) d);
 }
 
 
 /*
- *  fract -
+ *  fract - return true if positive.
  */
-
-fract fract::fract (longint n, longint d)
-{
-  unknown = false;
-  positive = true;
-  dirty = false;
-  whole = 0;
-  num = n;
-  demon = d;
-}
-
-
-fract fract::fract (int n, int d)
-{
-  return fract ((longint) n, (longint) d);
-}
-
 
 bool fract::is_positive (void)
 {
@@ -92,20 +126,53 @@ bool fract::is_positive (void)
 }
 
 
+/*
+ *  fract - return true if negative.
+ */
+
 bool fract::is_negative (void)
 {
   return !positive;
 }
 
 
-bool fract::is_unknown (void)
+/*
+ *  clean - mark fract as clean.
+ */
+
+fract fract::clean (void)
 {
-  return unknown;
+  dirty = false;
+  return *this;
 }
 
 
 /*
- *  addND - add the numerator/demonimator pairs of, this, and, right,
+ *  is_zero - pre-condition:  an initialised fraction.
+ *            post-condition: returns true if value == 0.
+ */
+
+bool fract::is_zero (void)
+{
+  return (whole == 0) && (num == 0);
+}
+
+
+/*
+ *  negate - flip the sign of fraction.
+ *           The magnitude remains the same, so:    1+1/2
+ *                                      becomes:  -(1+1/2)
+ */
+
+fract fract::negate (void)
+{
+  positive = !positive;
+  return *this;
+}
+
+
+/*
+ *  addND - add the numerator/denomimator pairs of, this, and, right,
  *          ignoring whole values.
  *          Although it will propagate the carry (if it exists) into whole.
  *
@@ -115,26 +182,26 @@ bool fract::is_unknown (void)
 
 fract fract::addND (fract right)
 {
-  if (is_zero ())
+  if (num == 0)                // cannot use is_zero since whole might be >0
     {
       num = right.num;
-      demon = right.demon;
+      denom = right.denom;
     }
-  else if (right.is_zero ())
+  else if (right.num == 0)     // cannot use is_zero since whole might be >0
     ;    /* nothing to do */
   else
     {
-      longint g, lg, rg;
+      longcard g, lg, rg;
 
-      g = gcd (demon, right.demon);
-      lg = right.demon / g;
-      rg = demon / g;
+      g = gcd (denom, right.denom);
+      lg = right.denom / g;
+      rg = denom / g;
       
       num = (num * lg) + (right.num * rg);
-      demon = demon * lg;
-      return simplify(l);   /* handles carry */
+      denom = denom * lg;
+      simplify ();   /* handles carry */
     }
-  return this;
+  return *this;
 }
 
 
@@ -152,15 +219,15 @@ fract fract::inc (fract right)
   right.simplify();
 
   if (right.is_zero ())
-    return this;
-  else if (isZero ())
+    return *this;
+  else if (is_zero ())
     {
-      this = right;
-      return this;
+      *this = right;
+      return *this;
     }
   if (positive == right.positive)
     {
-      dirty();
+      dirty = true;
       whole += right.whole ;
       return addND (right);
     }
@@ -171,7 +238,7 @@ fract fract::inc (fract right)
   else if (positive && (right.is_negative ()))
     return dec (right.negate ());
   else if (is_negative () && (right.is_positive ()))
-    return negate ().dec (r).negate ();
+    return negate ().dec (right).negate ();
 
   /*
    *  all cases should be handled above
@@ -181,113 +248,346 @@ fract fract::inc (fract right)
 
 
 /*
+ *  dec - decrements fract by right.
+ *        pre-condition:  an initialised fract.
+ *        post-condition: this -= right; return this;
+ */
+
+fract fract::dec (fract right)
+{
+  /* --fixme-- finish this code */
+}
+
+/*
+ *  subND - sub the numerator/denomimator pairs of, this, and, right
+ *          ignoring whole values.  It returns true if it needs to borrow
+ *          from this.whole.
+ *
+ *          pre-condition:   two initialised fracts.
+ *          post-condition:  this -= right ; return carry required.
+ */
+
+fract fract::subND (fract right)
+{
+  longcard g, lg, rg;
+
+  if (num == 0)
+    {
+      num = right.denom-num;
+      denom = right.denom;
+      dirty = true;
+      return right.num != 0;
+    }
+  else if (right.num == 0)
+    {
+      /* nothing to do */
+      return false;
+    }
+  else
+    {
+      dirty = true;
+      g = gcd (denom, right.denom) ;
+      lg = right.denom / g;
+      rg = denom / g;
+      
+      if ((num * lg) >= (right.num * rg))
+	{
+	  /* no need to borrow */
+	  num = (num * lg) - (right.num * rg);
+	  denom = denom * lg ;
+	  return false;
+	}
+      else
+	{
+	  /* need to borrow */
+	  denom = denom * lg;
+	  num = (right.num * rg) - (num * lg);
+	  return true;
+	}
+    }
+}
+
+#if 0
+(*
+   dec - returns, l, after, r, has been subtracted.
+*)
+
+PROCEDURE dec (l, r: Fract) : Fract ;
+VAR
+   n   : BOOLEAN ;
+   t, s: Fract ;
+BEGIN
+   l := simplify(l) ;
+   r := simplify(r) ;
+   IF isZero(r)
+   THEN
+      RETURN l
+   ELSIF isZero(l)
+   THEN
+      IF isZero(r)
+      THEN
+         l^.positive := TRUE
+      ELSE
+         l^.positive := NOT r^.positive
+      END ;
+      l^.whole := r^.whole ;
+      l^.num := r^.num ;
+      l^.denom := r^.denom ;
+      RETURN dirty(l)
+   END ;
+   IF r=l
+   THEN
+      r := dup(l)
+   END ;
+   IF l^.positive AND r^.positive
+   THEN
+      l := dirty(l) ;
+      IF r^.whole<=l^.whole
+      THEN
+         (* positive whole result *)
+         l^.whole := l^.whole-r^.whole ;
+         IF isZero(l)
+         THEN
+            l^.num := r^.num ;
+            l^.denom := r^.denom ;
+            IF (l^.whole=0) AND (l^.num=0)
+            THEN
+               l^.positive := TRUE
+            ELSE
+               l^.positive := FALSE
+            END
+         ELSIF subND(l, r)
+         THEN
+            IF l^.whole>=1
+            THEN
+               DEC(l^.whole)
+            ELSE
+               l^.positive := FALSE
+            END
+         END
+      ELSE
+         (* negative whole result, therefore flip the operands and subtract *)
+         l^.whole := r^.whole-l^.whole ;
+         l^.positive := FALSE ;
+         s := initFract(0, l^.num, l^.denom) ;
+         t := initFract(0, r^.num, r^.denom) ;
+         IF subND(t, s)
+         THEN
+            DEC(l^.whole)
+         END ;
+         l^.num := t^.num ;
+         l^.denom := t^.denom
+      END
+   ELSIF (NOT l^.positive) AND (NOT r^.positive)
+   THEN
+      l := inc(l, negate(r))
+   ELSIF l^.positive AND (NOT r^.positive)
+   THEN
+      l := inc(l, negate(r))
+   ELSIF (NOT l^.positive) AND r^.positive
+   THEN
+      RETURN negate(inc(negate(l), r))
+   ELSE
+      HALT
+   END ;
+   RETURN simplify(l)
+END dec ;
+#endif
+
+
+/*
+ *  the + operator - pre-condition:   an initialised fract.
+ *                   post-condition:  this += right
+ *
+ */
+
+fract fract::operator+ (const fract &right)
+{
+  fract t = *this;  // we make a copy so we do not destroy *this
+
+  return t.inc (right).simplify ();
+}
+
+
+/*
+ *  the + operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left + right
+ */
+
+fract fract::operator+ (int right)
+{
+  fract r = fract (right);
+  fract l = *this;
+  return l + r;
+}
+
+
+/*
+ *  the + operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left + right
+ */
+
+fract operator+ (int left, const fract &right)
+{
+  fract l = fract (left);
+  return l + right;
+}
+
+
+/*
  *  the * operator - pre-condition:   an initialised fract.
  *                   post-condition:  this.mult(right)
+ *
+ *                   (as with the + operator we must not alter *this)
  */
 
 fract fract::operator* (const fract &right)
 {
   if (positive && right.positive)
     {
-      fract f = inc(inc (fract (whole * right.whole),
-			 inc (fract (whole * right.num, right.demon),
-			      fract (right.whole * num, demon))),
-		    fract (num * right.num, demon * right.demon));
-      return f;
-    }
-  else if (positive)
-    {
-      assert(right.is_negative ());
-      fract f = right.negate();
-      f = inc(inc(negate(cardinal(whole * f.whole)),
-                  inc(negate(initFract(0, l^.whole * r^.num, r^.demon)),
-                       negate(initFract(0, r^.whole * l^.num, l^.demon)))),
-               negate(initFract(0, l^.num*r^.num, l^.demon*r^.demon)))
-   ELSIF r^.positive
-   THEN
-      Assert(NOT l^.positive) ;
-      l := negate(l) ;
-      f := inc(inc(negate(cardinal(l^.whole*r^.whole)),
-                   inc(negate(initFract(0, l^.whole * r^.num, r^.demon)),
-                       negate(initFract(0, r^.whole * l^.num, l^.demon)))),
-               negate(initFract(0, l^.num*r^.num, l^.demon*r^.demon)))
-   ELSE
-      Assert((NOT l^.positive) AND (NOT r^.positive)) ;
-      l := negate(l) ;
-      r := negate(r) ;
-      f := inc(inc(cardinal(l^.whole*r^.whole),
-                   inc(initFract(0, l^.whole * r^.num, r^.demon),
-                       initFract(0, r^.whole * l^.num, l^.demon))),
-               initFract(0, l^.num*r^.num, l^.demon*r^.demon))
-   END ;
-   RETURN simplify(f)
+      /*
+       *         b            e                A*e     D*b     b*e
+       *     A   -    x    D  -   =  (A*D)  +  ---  +  ---  +  ---
+       *         c            f                 f       c      c*f
+       *
+       *
+       *                               W        X       Y       Z
+       */
 
+      fract W = fract (whole * right.whole);
+      fract X = fract (whole * right.num, right.denom);
+      fract Y = fract (right.whole * num, denom);
+      fract Z = fract (num * right.num, denom * right.denom);
+      fract r = W+X+Y+Z;
+
+      return r;
+    }
+  assert (false);
+}
+
+
+/*
+ *  the + operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left * right
+ */
+
+fract fract::operator* (int right)
+{
+  fract r = fract (right);
+  fract l = *this;
+  return l * r;
+}
+
+
+/*
+ *  the * operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left * right
+ */
+
+fract operator* (int left, const fract &right)
+{
+  fract l = fract (left);
+  return l * right;
 }
 
 
 /*
  *  simplify - pre-condition :  an initialised fract
  *             post-condition:  the same value is returned by the
- *                              whole, num, demon are converted into their
+ *                              whole, num, denom are converted into their
  *                              simplist form.
  */
 
 fract fract::simplify (void)
 {
-  longint d;
-
+  longcard d;
 
   if (! dirty)
-    return this;
+    return *this;
 
-  if ((num != 0) && (demon != 0))
+  if ((num != 0) && (denom != 0))
     {
-      if (num > demon)
+      if (num > denom)
 	{
-	  d = num/demon;
+	  d = num/denom;
 	  if (whole>=0)
 	    whole += d;
 	  else
 	    whole -= d;
-	  num = num % demon;
+	  num = num % denom;
 	}
-      if ((num != 0) AND (demon != 0))
+      if ((num != 0) && (denom != 0))
 	{
-	  d = gcd(num, demon);
+	  d = gcd(num, denom);
 	  if (d>1)
 	    {
 	      num = num / d;
-	      demon = demon DIV d;
+	      denom = denom / d;
 	    }
 	}
-      if (num == demon)
+      if (num == denom)
 	{
 	  assert (num == 1);
 	  num = 0;
-	  demon = 0;
+	  denom = 0;
 	  whole++;
 	}
       if (num == 0)
-	demon = 0;
+	denom = 0;
     }
-  return clean ();
+  *this = clean ();
+  return *this;
 }
 
 
 /*
- *  gcd - pre-condition :  x and y are both >0
- *        post-condition:  return the greatest demoninator of, x, and, y.
+ *   operator<<  - shift left (output) operator.
+ *                 pre-condition :  an initialised list.
+ *                 post-condition:  fraction printed and stream returned.
  */
-   
-longint gcd (longint x, longint y)
-{
-  while (x != y)
-    {
-      if (x > y)
-	x -= y;
-      else
-	y -= x;
-    }
-  return x;
-}
 
+std::ostream& operator<< (std::ostream& os, const fract &f)
+{
+  fract g = f;
+
+  if (g.is_zero ())
+    {
+      os << "0";
+      return os;
+    }
+  if (! f.positive)
+    {
+      os << "-";
+      if (f.whole != 0 && f.num != 0)
+	{
+	  os << "(";
+	  if (f.whole != 0)
+	    {
+	      os << f.whole;
+	      os << "+";
+	    }
+	  os << f.num;
+	  os << "/";
+	  os << f.denom;
+	  os << ")";
+	}
+    }
+  else if (f.whole == 0)
+    {
+      os << f.num;
+      os << "/";
+      os << f.denom;
+    }
+  else
+    {
+      os << f.whole;
+      if (f.num != 0)
+	{
+	  os << "+";
+	  os << f.num;
+	  os << "/";
+	  os << f.denom;
+	}
+    }
+  return os;
+}

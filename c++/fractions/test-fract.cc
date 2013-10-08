@@ -1,0 +1,69 @@
+/*
+ *  test-fract.cc - test code for the fract.cc module.
+ */
+
+#include <fract.h>
+#include <cassert>
+#include <cstdio>
+
+
+main ()
+{
+  {
+    fract a = fract (1, 2);
+    std::cout << "a = " << a << "\n";
+  }
+
+  {
+    fract a = fract (1, 2);
+    fract b = fract (1, 2);
+    fract c = a + b;
+
+    std::cout << a << " + " << b << " = " << c << "\n";
+  }
+
+  {
+    fract a = fract (1, 2);
+    fract b = fract (1, 2);
+    fract c = a + a + b;
+
+    std::cout << a << " + " << a << " + " << b << " = " << c << "\n";
+  }
+
+  {
+    fract a = fract (1, 2);
+    fract b = a + 1;
+
+    std::cout << a << " + " << 1 << " = " << b << "\n";
+  }
+
+  {
+    fract a = fract (1, 2);
+    fract b = 1 + a;
+
+    std::cout << 1 << " + " << a << " = " << b << "\n";
+  }
+
+  {
+    fract a = fract (1, 2);
+    fract b = 3 * a;
+
+    std::cout << 3 << " * " << a << " = " << b << "\n";
+  }
+
+  {
+    fract a = fract (1, 2);
+    fract b = a * 3;
+
+    std::cout << a << " * " << 3 << " = " << b << "\n";
+  }
+
+  {
+    fract a = fract (2, 3);
+    fract b = fract (1, 4);
+    fract c = a + b;
+
+    std::cout << a << " + " << b << " = " << c << "\n";
+  }
+}
+
