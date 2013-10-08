@@ -65,5 +65,11 @@ main ()
 
     std::cout << a << " + " << b << " = " << c << "\n";
   }
-}
 
+  {
+    fract a = fract (2, 3);
+    fract b = a * 2;
+
+    std::cout << a << " * " << 2 << " = " << b << "\n";
+  }
+}
