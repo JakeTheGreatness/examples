@@ -1,5 +1,9 @@
 /*
+ *  Copyright (C) 2013 Free Software Foundation, Inc.
+ *
  *  test-slist.cc - test code for the slist.cc module.
+ *
+ *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
  */
 
 #include <slist.h>

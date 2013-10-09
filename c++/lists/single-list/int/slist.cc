@@ -1,11 +1,14 @@
 /*
- *  implement a single linked list.
+ *  Copyright (C) 2013 Free Software Foundation, Inc.
+ *
+ *  single linked list implementation.
+ *
+ *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
  */
 
 #include <slist.h>
 #include <cassert>
 #include <cstdio>
-
 
 const bool debugging = false;
 

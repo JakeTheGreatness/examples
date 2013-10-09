@@ -1,5 +1,9 @@
 /*
+ *  Copyright (C) 2013 Free Software Foundation, Inc.
+ *
  *  test-fract.cc - test code for the fract.cc module.
+ *
+ *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
  */
 
 #include <fract.h>
@@ -71,5 +75,13 @@ main ()
     fract b = a * 2;
 
     std::cout << a << " * " << 2 << " = " << b << "\n";
+  }
+
+  {
+    fract a = fract (2, 3);
+    fract b = fract (1, 4);
+    fract c = a - b;
+
+    std::cout << a << " - " << b << " = " << c << "\n";
   }
 }

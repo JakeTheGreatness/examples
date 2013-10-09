@@ -1,3 +1,11 @@
+/*
+ *  Copyright (C) 2013 Free Software Foundation, Inc.
+ *
+ *  introduce the fractional data type.
+ *
+ *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
+ */
+
 #include <fract.h>
 #include <cassert>
 #include <cstdio>
@@ -29,7 +37,7 @@ longcard gcd (longcard x, longcard y)
  */
 
 fract::fract (void)
-  : positive(true), dirty(false), whole(0), num(0), denom(0)
+  : positive(true), top_heavy(false), whole(0), num(0), denom(0)
 {
 }
 
@@ -46,7 +54,7 @@ fract::~fract (void)
 fract::fract (const fract &from)
 {
   this->positive = from.positive;
-  this->dirty = from.dirty;
+  this->top_heavy = from.top_heavy;
   this->whole = from.whole;
   this->num = from.num;
   this->denom = from.denom;
@@ -60,7 +68,7 @@ fract::fract (const fract &from)
 fract& fract::operator= (const fract &from)
 {
   this->positive = from.positive;
-  this->dirty = from.dirty;
+  this->top_heavy = from.top_heavy;
   this->whole = from.whole;
   this->num = from.num;
   this->denom = from.denom;
@@ -74,7 +82,7 @@ fract& fract::operator= (const fract &from)
 fract::fract (longcard value)
 {
   positive = true;
-  dirty = false;
+  top_heavy = false;
   whole = value;
   num = 0;
   denom = 0;
@@ -88,7 +96,7 @@ fract::fract (longcard value)
 fract::fract (longcard n, longcard d)
 {
   positive = true;
-  dirty = (n != 0);
+  top_heavy = (n != 0);
   whole = 0;
   num = n;
   denom = d;
@@ -137,12 +145,12 @@ bool fract::is_negative (void)
 
 
 /*
- *  clean - mark fract as clean.
+ *  clean - mark fract as not top_heavy.
  */
 
 fract fract::clean (void)
 {
-  dirty = false;
+  top_heavy = false;
   return *this;
 }
 
@@ -215,29 +223,35 @@ fract fract::inc (fract right)
 {
   bool n;
 
-  simplify();
-  right.simplify();
+  simplify ();        // ensure that fract is not top heavy
+  right.simplify ();  // likewise for right operand
 
   if (right.is_zero ())
     return *this;
   else if (is_zero ())
     {
-      *this = right;
-      return *this;
+      return right;
     }
+  /*
+   *  check for both positive or both negative
+   *
+   *    1 + 1  =>  2     (sign remains the same)
+   *   -1 + -1 => -2     (in both cases)
+   */
   if (positive == right.positive)
     {
-      dirty = true;
+      top_heavy = true;
       whole += right.whole ;
       return addND (right);
     }
   /*
-   *  call upon dec to perform the next computations - but we ensure that
-   *  its arguments are positive.
+   *  ok from now on one of the operands is negative and the other positive
+   *  so we call upon dec to perform the next computations - but we ensure that
+   *  its arguments are positive (as dec may call inc if its arguments are negative).
    */
   else if (positive && (right.is_negative ()))
     return dec (right.negate ());
-  else if (is_negative () && (right.is_positive ()))
+  else if (is_negative() && (right.is_positive ()))
     return negate ().dec (right).negate ();
 
   /*
@@ -255,27 +269,112 @@ fract fract::inc (fract right)
 
 fract fract::dec (fract right)
 {
-  /* --fixme-- finish this code */
+  simplify ();        // ensure that fract is not top heavy
+  right.simplify ();  // likewise for right operand
+
+  if (right.is_zero ())
+    // nothing to do, finish now
+    return *this;
+  if (is_zero ())
+    {
+      assert (! right.is_zero ());
+      positive = !positive;
+      whole = right.whole;
+      num = right.num;
+      denom = right.denom;
+      return top_heavy;
+    }
+  // easy cases done, now check the four combinations of sign
+  if (positive && right.positive)
+    {
+      top_heavy = true;
+      if (right.whole <= whole)
+	{
+	  // positive whole result, now work out fractional part
+	  whole -= right.whole;
+	  if (is_zero ())
+	    {
+	      num = right.num;
+	      denom = right.denom;
+	      if (whole == 0 && num == 0)
+		positive = true;
+	      else
+		positive = false;
+	    }
+	  else if (subND (*this, right))
+	    {
+	      /*
+	       *  we have performed the fractional computation from
+	       *  this = this - right and we need to borrow from whole
+	       */
+	      if (whole >= 1)
+		whole--;
+	      else
+		positive = false;
+	    }
+	}
+      else
+	{
+	  // negative whole result, therefore flip operands and subtract, ie  (right - left)
+	  whole = right.whole - whole;
+	  positive = false;
+
+	  // we call subND to calculate the fractional component
+	  fract a = fract (num, denom);
+	  fract b = fract (right.num, right.denom);
+	  if (subND (b, a))
+	    whole--;
+	  num = b.num;
+	  denom = b.denom;
+	}
+    }
+  /*
+   *  fortunately it gets easier from now as we can re-use the above code after sign flipping
+   */
+  else if ((! positive) && (! right.positive))
+    /*
+     *  both operands are negative, use increment, after negating the second operand and ignore the sign
+     *  for example:  -3 - -2  =>  -3 + 2  =>  -1
+     */
+    
+    *this = inc (right.negate ());
+  else if (positive && (! right.positive))
+    /*
+     *  subtracting a negative right operand
+     *  for example:  +3 - -2  =>  +3 + 2  =>  5
+     */
+
+    *this = inc (right.negate ());    // notice the same as above, we could combine, but safer to enumerate all cases
+  else if (((! positive) && (right.positive)))
+    /*
+     *  negative left - positive right operand
+     *  for example:  -3 - +2  =>   -1
+     */
+    *this = negate ().inc (right).negate ();
+  else
+    assert (false);   // all cases should be checked above
+  return simplify ();
 }
 
+
 /*
- *  subND - sub the numerator/denomimator pairs of, this, and, right
+ *  subND - sub the numerator/denomimator pairs of, left, and, right
  *          ignoring whole values.  It returns true if it needs to borrow
- *          from this.whole.
+ *          from left.whole.
  *
  *          pre-condition:   two initialised fracts.
- *          post-condition:  this -= right ; return carry required.
+ *          post-condition:  left -= right ; return carry required.
  */
 
-fract fract::subND (fract right)
+bool fract::subND (fract &left, fract right)
 {
   longcard g, lg, rg;
 
-  if (num == 0)
+  if (left.num == 0)
     {
-      num = right.denom-num;
-      denom = right.denom;
-      dirty = true;
+      left.num = right.denom-left.num;
+      left.denom = right.denom;
+      left.top_heavy = true;
       return right.num != 0;
     }
   else if (right.num == 0)
@@ -285,114 +384,53 @@ fract fract::subND (fract right)
     }
   else
     {
-      dirty = true;
-      g = gcd (denom, right.denom) ;
+      left.top_heavy = true;
+      g = gcd (left.denom, right.denom) ;
       lg = right.denom / g;
-      rg = denom / g;
+      rg = left.denom / g;
       
-      if ((num * lg) >= (right.num * rg))
+      if ((left.num * lg) >= (right.num * rg))
 	{
 	  /* no need to borrow */
-	  num = (num * lg) - (right.num * rg);
-	  denom = denom * lg ;
+	  left.num = (num * lg) - (right.num * rg);
+	  left.denom = left.denom * lg ;
 	  return false;
 	}
       else
 	{
 	  /* need to borrow */
-	  denom = denom * lg;
-	  num = (right.num * rg) - (num * lg);
+	  left.denom = left.denom * lg;
+	  left.num = (right.num * rg) - (left.num * lg);
 	  return true;
 	}
     }
 }
 
-#if 0
-(*
-   dec - returns, l, after, r, has been subtracted.
-*)
 
-PROCEDURE dec (l, r: Fract) : Fract ;
-VAR
-   n   : BOOLEAN ;
-   t, s: Fract ;
-BEGIN
-   l := simplify(l) ;
-   r := simplify(r) ;
-   IF isZero(r)
-   THEN
-      RETURN l
-   ELSIF isZero(l)
-   THEN
-      IF isZero(r)
-      THEN
-         l^.positive := TRUE
-      ELSE
-         l^.positive := NOT r^.positive
-      END ;
-      l^.whole := r^.whole ;
-      l^.num := r^.num ;
-      l^.denom := r^.denom ;
-      RETURN dirty(l)
-   END ;
-   IF r=l
-   THEN
-      r := dup(l)
-   END ;
-   IF l^.positive AND r^.positive
-   THEN
-      l := dirty(l) ;
-      IF r^.whole<=l^.whole
-      THEN
-         (* positive whole result *)
-         l^.whole := l^.whole-r^.whole ;
-         IF isZero(l)
-         THEN
-            l^.num := r^.num ;
-            l^.denom := r^.denom ;
-            IF (l^.whole=0) AND (l^.num=0)
-            THEN
-               l^.positive := TRUE
-            ELSE
-               l^.positive := FALSE
-            END
-         ELSIF subND(l, r)
-         THEN
-            IF l^.whole>=1
-            THEN
-               DEC(l^.whole)
-            ELSE
-               l^.positive := FALSE
-            END
-         END
-      ELSE
-         (* negative whole result, therefore flip the operands and subtract *)
-         l^.whole := r^.whole-l^.whole ;
-         l^.positive := FALSE ;
-         s := initFract(0, l^.num, l^.denom) ;
-         t := initFract(0, r^.num, r^.denom) ;
-         IF subND(t, s)
-         THEN
-            DEC(l^.whole)
-         END ;
-         l^.num := t^.num ;
-         l^.denom := t^.denom
-      END
-   ELSIF (NOT l^.positive) AND (NOT r^.positive)
-   THEN
-      l := inc(l, negate(r))
-   ELSIF l^.positive AND (NOT r^.positive)
-   THEN
-      l := inc(l, negate(r))
-   ELSIF (NOT l^.positive) AND r^.positive
-   THEN
-      RETURN negate(inc(negate(l), r))
-   ELSE
-      HALT
-   END ;
-   RETURN simplify(l)
-END dec ;
-#endif
+/*
+ *  reciprocal - perform the reciprocal function.
+ *               pre-condition :  an initialised fraction.
+ *               post-condition:  returns 1/this
+ */
+
+fract fract::reciprocal (void)
+{
+  if (num == 0 && whole == 0)
+    return fract (0);
+  else if (num == 0)
+    /* only a whole number */
+    return fract ((longcard)1, whole);
+  else
+    {
+      fract r = fract (denom, whole * denom + num);
+      r.top_heavy = true;
+
+      if (! positive)
+	r = r.negate ();
+      
+      return r.simplify ();
+    }
+}
 
 
 /*
@@ -462,6 +500,7 @@ fract fract::operator* (const fract &right)
 
       return r;
     }
+  // to do, finish the other three cases of multiply
   assert (false);
 }
 
@@ -492,6 +531,45 @@ fract operator* (int left, const fract &right)
 
 
 /*
+ *  the - operator - pre-condition:   an initialised fract.
+ *                   post-condition:  this -= right
+ *
+ */
+
+fract fract::operator- (const fract &right)
+{
+  fract t = *this;  // we make a copy so we do not destroy *this
+
+  return t.dec (right).simplify ();
+}
+
+
+/*
+ *  the - operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left - right
+ */
+
+fract fract::operator- (int right)
+{
+  fract r = fract (right);
+  fract l = *this;
+  return l - r;
+}
+
+
+/*
+ *  the - operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left - right
+ */
+
+fract operator- (int left, const fract &right)
+{
+  fract l = fract (left);
+  return l - right;
+}
+
+
+/*
  *  simplify - pre-condition :  an initialised fract
  *             post-condition:  the same value is returned by the
  *                              whole, num, denom are converted into their
@@ -502,7 +580,7 @@ fract fract::simplify (void)
 {
   longcard d;
 
-  if (! dirty)
+  if (! top_heavy)
     return *this;
 
   if ((num != 0) && (denom != 0))

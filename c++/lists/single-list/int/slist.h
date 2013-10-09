@@ -1,11 +1,15 @@
+/*
+ *  Copyright (C) 2013 Free Software Foundation, Inc.
+ *
+ *  single linked list implementation.
+ *
+ *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
+ */
+
 #if !defined(SLISTH)
 #  define SLISTH
 
 #include <iostream>
-
-/*
- *  single linked list implementation.
- */
 
 
 class element
