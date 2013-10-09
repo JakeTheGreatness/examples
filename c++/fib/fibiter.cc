@@ -11,9 +11,9 @@ static const int terms = 45;
 
 static int fibonacci (int n)
 {
-  int n1 = 1;   // fibonacci (n-1)
-  int n2 = 0;   // fibonacci (n-2)
-  int n3;       // fibonacci (n-3)
+  int n1 = 1;   // result of fibonacci (i-1)
+  int n2 = 0;   // result of fibonacci (i-2)
+  int n3;       // result of fibonacci (i-3)
 
   for (int i=2; i<n; i++)
     {
