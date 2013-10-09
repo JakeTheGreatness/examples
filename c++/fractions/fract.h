@@ -11,14 +11,8 @@
 
 #include <iostream>
 
-/*
- *  introduce the fractional data type.
- *
- *  <gaius@gnu.org>
- */
 
 typedef long unsigned int longcard;
-
 
 class fract
 {
