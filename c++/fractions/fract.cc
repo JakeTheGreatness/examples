@@ -145,10 +145,10 @@ bool fract::is_negative (void)
 
 
 /*
- *  clean - mark fract as not top_heavy.
+ *  not_top_heavy - mark fract as not top_heavy.
  */
 
-fract fract::clean (void)
+fract fract::not_top_heavy (void)
 {
   top_heavy = false;
   return *this;
@@ -500,7 +500,15 @@ fract fract::operator* (const fract &right)
 
       return r;
     }
-  // to do, finish the other three cases of multiply
+  if (positive && (! right.positive))
+    {
+      fract r = right;
+      
+      r = (*this) * r.negate();
+      return r.negate ();
+    }
+  // to do, finish the other two cases of multiply
+
   assert (false);
 }
 
@@ -613,7 +621,7 @@ fract fract::simplify (void)
       if (num == 0)
 	denom = 0;
     }
-  *this = clean ();
+  *this = not_top_heavy ();
   return *this;
 }
 
@@ -648,6 +656,14 @@ std::ostream& operator<< (std::ostream& os, const fract &f)
 	  os << "/";
 	  os << f.denom;
 	  os << ")";
+	}
+      else if (f.num == 0)
+	os << f.whole;
+      else
+	{
+	  os << f.num;
+	  os << "/";
+	  os << f.denom;
 	}
     }
   else if (f.whole == 0)

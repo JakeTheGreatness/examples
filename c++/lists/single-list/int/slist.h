@@ -23,8 +23,9 @@ class slist
 {
  private:
   element *head_element;
-  element *duplicate_elements (element *e);  
-  element *delete_elements (element *h);
+  element *duplicate_elements (element *e);
+  element *delete_elements (void);
+  slist    cons (element *e);
   friend std::ostream& operator<< (std::ostream& os, const slist& l);
 
  public:
@@ -38,6 +39,8 @@ class slist
   slist cons (int i);
   int   head (void);
   slist tail (void);
+  slist cons (slist l);
+  slist reverse (void);
 };
 
 #endif

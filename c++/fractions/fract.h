@@ -22,7 +22,7 @@ class fract
   longcard whole;
   longcard num;
   longcard denom;
-  fract clean (void);
+  fract not_top_heavy (void);
   bool is_top_heavy (void);   // if true it _might_ be top heavy, false it is _not_ top heavy
   fract addND (fract right);
   bool subND (fract &left, fract right);

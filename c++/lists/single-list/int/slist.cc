@@ -13,6 +13,9 @@
 const bool debugging = false;
 
 
+#undef USE_RECURSION
+
+
 /*
  *  slist - constructor, builds an empty list.
  *          pre-condition:    none.
@@ -33,19 +36,21 @@ slist::slist (void)
 
 slist::~slist (void)
 {
-  head_element = delete_elements (head_element);
+  head_element = delete_elements ();
 }
 
 
 /*
- *  delete_elements - delete all elements specified by, h.
- *                    pre-condition:  h points to a list of elements.
- *                    post-condition: zero is returned and all elements are
- *                                    deleted.
+ *  delete_elements - delete all elements of list.
+ *                    pre-condition:  none.
+ *                    post-condition: zero is returned and
+ *                                    all elements are deleted.
  */
 
-element *slist::delete_elements (element *h)
+element *slist::delete_elements (void)
 {
+  element *h = head_element;
+
   while (h != 0) {
     element *t = h;
     h = h->next;
@@ -59,7 +64,7 @@ element *slist::delete_elements (element *h)
 
 
 /*
- *  duplicate_elements - return a copy of all elements found in, e.
+ *  duplicate_elements - return a copy of all elements found in, slist.
  *                       pre-condition:  e points to a list of elements.
  *                       post-condition: a duplicate list is returned.
  */
@@ -107,7 +112,7 @@ slist::slist (const slist &from)
 
 slist& slist::operator= (const slist &from)
 {
-  head_element = delete_elements (head_element);
+  head_element = delete_elements ();
   head_element = duplicate_elements (from.head_element);
 }
 
@@ -185,6 +190,102 @@ slist slist::tail (void)
   else
     delete e;
   return *this;
+}
+
+
+#if defined(USE_RECURSION)
+
+/*
+ *  cons - append elements, e, to the end of our slist.
+ *         pre-condition :  e is a non empty list.
+ *         post-condition:  e is appended to slist.
+ */
+
+slist slist::cons (element *e)
+{
+  if (is_empty ())
+    head_element = e;
+  else
+    {
+      element *h = head_element;
+
+      while (h->next != 0)
+	h = h->next;
+      h->next = e;
+    }
+  return *this;
+}
+
+
+/*
+ *  cons - concatenate list, l, to the end of the current list.
+ *         pre-condition :  none.
+ *         post-condition:  returns the current list with a copy of
+ *                          contents of list, l, appended.
+ */
+
+slist slist::cons (slist l)
+{
+  if (l.is_empty ())
+    return *this;
+  else
+    {
+      int h = l.head ();  // use h to force evaluation order
+      return cons (h).cons (l.tail ());
+    }
+}
+
+#else
+
+/*
+ *  cons - append elements, e, to the end of our slist.
+ *         pre-condition :  e is a non empty list.
+ *         post-condition:  e is appended to slist.
+ */
+
+slist slist::cons (element *e)
+{
+  if (is_empty ())
+    head_element = e;
+  else
+    {
+      element *h = head_element;
+
+      while (h->next != 0)
+	h = h->next;
+      h->next = e;
+    }
+  return *this;
+}
+
+
+/*
+ *  cons - concatenate list, l, to the end of the current list.
+ *         pre-condition :  none.
+ *         post-condition:  returns the current list with a copy of
+ *                          contents of list, l, appended.
+ */
+
+slist slist::cons (slist l)
+{
+  if (l.is_empty ())
+    return *this;
+  else
+    return cons (duplicate_elements (l.head_element));
+}
+#endif
+
+
+/*
+ *  reverse - reverses the contents of list.
+ */
+
+slist slist::reverse (void)
+{
+  if (is_empty ())
+    return *this;
+  else
+    return tail ().reverse().cons (empty().cons (head ()));
 }
 
 
