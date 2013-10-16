@@ -12,6 +12,7 @@
 #include <slist.h>
 #include <cassert>
 #include <cstdio>
+#include <iostream>
 
 const bool debugging = false;
 
@@ -28,6 +29,15 @@ template <class T> class element
   T           data;
 };
 
+template <typename T> class slist;  // forward declaration, to say slist is a template class
+
+/*
+ *  forward declaration of the operator<< method
+ */
+template <typename T> std::ostream& operator<< (std::ostream& os, const slist <T>& l);
+
+
+
 template <class T> class slist
 {
  private:
@@ -42,6 +52,7 @@ template <class T> class slist
   ~slist (void);
   slist (const slist &from);
   slist& operator= (const slist &from);
+  friend std::ostream& operator<< <> (std::ostream& os, const slist<T>& l);
   
   slist empty (void);
   bool  is_empty (void);
@@ -142,6 +153,9 @@ template <class T> slist<T>::slist (const slist<T> &from)
 
 template <class T> slist<T>& slist<T>::operator= (const slist<T> &from)
 {
+  if (this->head_element == from.head_element)
+    return *this;
+
   head_element = e_delete (head_element);
   head_element = e_dup (from.head_element);
 }
@@ -274,6 +288,33 @@ template <class T> int slist<T>::e_length (element<T> *h)
 template <class T> int slist<T>::length (void)
 {
   return e_length (head_element);
+}
+
+
+/*
+ *   operator<<  - shift left (output) operator.
+ *                 pre-condition :  an initialised list.
+ *                 post-condition:  list printed and stream returned.
+ */
+
+template<class T>
+std::ostream& operator<< (std::ostream& os, const slist<T>& l)
+
+{
+  element<T> *e = l.head_element;
+  bool seen = false;
+
+  os << "[";
+  while (e != 0)
+    {
+      if (seen)
+	os << ", ";
+      os << e->data;
+      e = e->next;
+      seen = true;
+    }
+  os << "]";
+  return os;
 }
 
 #endif

@@ -112,6 +112,9 @@ slist::slist (const slist &from)
 
 slist& slist::operator= (const slist &from)
 {
+  if (this->head_element == from.head_element)
+    return *this;
+  
   head_element = delete_elements ();
   head_element = duplicate_elements (from.head_element);
 }

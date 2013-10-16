@@ -31,6 +31,23 @@ longcard gcd (longcard x, longcard y)
 
 
 /*
+ *  factorial - return n!
+ */
+
+longcard factorial (longcard n)
+{
+  longcard value = 1;
+
+  while (n > 0)
+    {
+      value *= n;
+      n--;
+    }
+  return value;
+}
+
+
+/*
  *  fract - constructor.
  *          pre-condition : none.
  *          post-condition: an unknown fract is created.
@@ -508,13 +525,31 @@ fract fract::operator* (const fract &right)
       return r.negate ();
     }
   // to do, finish the other two cases of multiply
+  if ((! positive) && right.positive)
+    {
+      fract r;
+
+      negate ();
+      r = (*this) * right;
+      r = r.negate ();
+      return r;
+    }
+  if ((! positive) && (! right.positive))
+    {
+      fract r = right;
+
+      r = r.negate ();
+      negate ();
+      r = (*this) * r;
+      return r;
+    }
 
   assert (false);
 }
 
 
 /*
- *  the + operator - pre-condition:   an initialised fract.
+ *  the * operator - pre-condition:   an initialised fract.
  *                   post-condition:  left * right
  */
 
@@ -576,6 +611,216 @@ fract operator- (int left, const fract &right)
   return l - right;
 }
 
+
+/*
+ *  the / operator - pre-condition:   an initialised fract.
+ *                   post-condition:  this / right
+ *
+ */
+
+fract fract::operator/ (const fract &right)
+{
+  fract l = *this;
+
+  return l.reciprocal () * right;
+}
+
+
+/*
+ *  the / operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left / right
+ */
+
+fract fract::operator/ (int right)
+{
+  fract r = fract (right);
+  fract l = *this;
+
+  return l * r.reciprocal ();
+}
+
+
+/*
+ *  the / operator - pre-condition:   an initialised fract.
+ *                   post-condition:  left - right
+ */
+
+fract operator/ (int left, const fract &right)
+{
+  fract l = fract (left).reciprocal ();
+
+  return l * right;
+}
+
+
+/*
+ *  sin - compute sin (r) using Taylors expansion.
+ *
+ *                 3      5      7      9
+ *                r      r      r      r
+ *        = r  -  --  +  --  -  --  +  --   etc
+ *                3!     5!     7!     9!
+ *
+ */
+
+fract fract::sin (fract radians)
+{
+  fract sum = radians;
+  bool pos = false;
+
+  for (int i = 3; i < 9; i += 2)
+    {
+      if (pos)
+	sum += (radians.power (i) / fract (factorial (i)));
+      else
+	sum -= (radians.power (i) / fract (factorial (i)));
+      pos = !pos;
+    }
+  return pos;
+}
+
+
+/*
+ *  cos - compute cos (r) using Taylors expansion.
+ *
+ *                 2      4      6      8
+ *                r      r      r      r
+ *        = 1  -  --  +  --  -  --  +  --   etc
+ *                2!     4!     6!     8!
+ *
+ */
+
+fract fract::cos (fract radians)
+{
+  fract sum = fract (1);
+  bool pos = false;
+
+  for (int i = 2; i < 8; i += 2)
+    {
+      if (pos)
+	sum += (radians.power (i) / fract (factorial (i)));
+      else
+	sum -= (radians.power (i) / fract (factorial (i)));
+      pos = !pos;
+    }
+  return pos;
+}
+
+
+/*
+ *                     n
+ *  power - return this
+ *          pre-condition :  none.
+ *          post-condition:  this^n.
+ */
+
+fract fract::power (int n)
+{
+  fract r = fract (1);
+
+  while (n > 0)
+    {
+      r *= (*this);
+      n--;
+    }
+  return r;
+}
+
+
+/*
+ *  operator+=  implement the += operator.
+ *              pre-condition :  none.
+ *              post-condition:  return this += right
+ */
+
+fract& fract::operator+= (const fract &right)
+{
+  fract r = (*this) + right;
+
+  *this = r;
+}
+
+
+/*
+ *  operator+=  implement the += operator.
+ *              pre-condition :  none.
+ *              post-condition:  return this += right
+ */
+
+fract& fract::operator+= (int right)
+{
+  fract r = (*this) + fract (right);
+
+  *this = r;
+}
+
+
+/*
+ *  operator-=  implement the -= operator.
+ *              pre-condition :  none.
+ *              post-condition:  return this += right
+ */
+
+fract& fract::operator-= (const fract &right)
+{
+  fract r = (*this) - right;
+
+  *this = r;
+}
+
+
+/*
+ *  operator-=  implement the -= operator.
+ *              pre-condition :  none.
+ *              post-condition:  return this += right
+ */
+
+fract& fract::operator-= (int right)
+{
+  fract r = (*this) - fract (right);
+
+  *this = r;
+}
+
+
+/*
+ *  operator*=  implement the *= operator.
+ *              pre-condition :  none.
+ *              post-condition:  return this += right
+ */
+
+fract& fract::operator*= (const fract &right)
+{
+  fract r = (*this) * right;
+
+  *this = r;
+}
+
+
+/*
+ *  operator*=  implement the *= operator.
+ *              pre-condition :  none.
+ *              post-condition:  return this += right
+ */
+
+fract& fract::operator*= (int right)
+{
+  fract r = (*this) * fract (right);
+
+  *this = r;
+}
+
+
+/*
+ *  operator- - unary - operator overload.
+ *              pre-condition :  none.
+ *              post-condition:  -this.
+ */
+
+fract fract::operator- (void)
+{
+  return negate ();
+}
 
 /*
  *  simplify - pre-condition :  an initialised fract

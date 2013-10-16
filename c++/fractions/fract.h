@@ -57,6 +57,25 @@ class fract
   fract operator- (const fract &right);
   fract operator- (int right);
   friend fract operator- (int left, const fract &right);  // friend to int
+  fract operator- (void);
+
+  fract operator/ (const fract &right);
+  fract operator/ (int right);
+  friend fract operator/ (int left, const fract &right);  // friend to int
+
+  fract& operator+= (const fract &right);
+  fract& operator+= (int right);
+
+  fract& operator-= (const fract &right);
+  fract& operator-= (int right);
+
+  fract& operator*= (const fract &right);
+  fract& operator*= (int right);
+
+  fract sin (fract radians);
+  fract cos (fract radians);
+
+  fract power (int);
 };
 
 #endif
