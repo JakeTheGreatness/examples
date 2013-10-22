@@ -10,6 +10,8 @@
 #include <cassert>
 #include <cstdio>
 
+static const bool debugging = false;
+
 
 /*
  *  gcd - Euclid's Greatest Common Denominator algorithm.
@@ -621,8 +623,10 @@ fract operator- (int left, const fract &right)
 fract fract::operator/ (const fract &right)
 {
   fract l = *this;
-
-  return l.reciprocal () * right;
+  fract r = right;
+  
+  r = r.reciprocal ();
+  return l * r;
 }
 
 
@@ -636,7 +640,8 @@ fract fract::operator/ (int right)
   fract r = fract (right);
   fract l = *this;
 
-  return l * r.reciprocal ();
+  r = r.reciprocal ();
+  return l * r;
 }
 
 
@@ -647,14 +652,17 @@ fract fract::operator/ (int right)
 
 fract operator/ (int left, const fract &right)
 {
-  fract l = fract (left).reciprocal ();
+  fract l = fract (left);
+  fract r = right;
 
-  return l * right;
+  r = r.reciprocal ();
+  return l * r;
 }
 
 
 /*
  *  sin - compute sin (r) using Taylors expansion.
+ *        r is 'this'.
  *
  *                 3      5      7      9
  *                r      r      r      r
@@ -663,25 +671,36 @@ fract operator/ (int left, const fract &right)
  *
  */
 
-fract fract::sin (fract radians)
+fract fract::sin (void)
 {
-  fract sum = radians;
+  fract r = *this;
+  fract sum = r;
   bool pos = false;
 
   for (int i = 3; i < 9; i += 2)
     {
+      if (debugging)
+	{
+	  fract t = (r.power (i) / fract (factorial (i)));
+    
+	  std::cout << t << "\n";
+	}
       if (pos)
-	sum += (radians.power (i) / fract (factorial (i)));
+	sum += (r.power (i) / fract (factorial (i)));
       else
-	sum -= (radians.power (i) / fract (factorial (i)));
+	sum -= (r.power (i) / fract (factorial (i)));
       pos = !pos;
     }
-  return pos;
+  sum = sum.simplify ();
+  if (debugging)
+    std::cout << " sin (" << *this << ") = " << sum << "\n";
+  return sum;
 }
 
 
 /*
  *  cos - compute cos (r) using Taylors expansion.
+ *        r is 'this'.
  *
  *                 2      4      6      8
  *                r      r      r      r
@@ -690,20 +709,21 @@ fract fract::sin (fract radians)
  *
  */
 
-fract fract::cos (fract radians)
+fract fract::cos (void)
 {
+  fract r = *this ;
   fract sum = fract (1);
   bool pos = false;
 
   for (int i = 2; i < 8; i += 2)
     {
       if (pos)
-	sum += (radians.power (i) / fract (factorial (i)));
+	sum += (r.power (i) / fract (factorial (i)));
       else
-	sum -= (radians.power (i) / fract (factorial (i)));
+	sum -= (r.power (i) / fract (factorial (i)));
       pos = !pos;
     }
-  return pos;
+  return sum;
 }
 
 
@@ -821,6 +841,47 @@ fract fract::operator- (void)
 {
   return negate ();
 }
+
+
+/*
+ *  f - convert fract to float.
+ */
+
+float fract::f (void)
+{
+  return ((float)whole)+((float)(num))/((float)(denom));
+}
+
+
+/*
+ *  f - convert fract to int.
+ */
+
+int fract::i (void)
+{
+  return ((int)whole)+((int)(num))/((int)(denom));
+}
+
+
+/*
+ *  d - convert fract to double.
+ */
+
+double fract::d (void)
+{
+  return ((double)whole)+((double)(num))/((double)(denom));
+}
+
+
+/*
+ *  ld - convert fract to long double.
+ */
+
+long double fract::ld (void)
+{
+  return ((long double)whole)+((long double)(num))/((long double)(denom));
+}
+
 
 /*
  *  simplify - pre-condition :  an initialised fract

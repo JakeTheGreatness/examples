@@ -1,7 +1,7 @@
 /*
  *  Copyright (C) 2013 Free Software Foundation, Inc.
  *
- *  maxtrix.h - a simple 3x3 matrix class.
+ *  matrix.h - a simple 3x3 matrix class.
  *
  *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
  */
@@ -235,7 +235,6 @@ template <class T> matrix<T>& matrix<T>::operator~ (void)
   for (int j = 0; j<dimensions; j++)
     for (int i = 0; i<dimensions; i++)
       contents[j][i] = ~contents[j][i];
-  return this;
 }
 
 
@@ -253,7 +252,6 @@ template <class T> matrix<T>& matrix<T>::operator() (void)
   for (int j = 0; j<dimensions; j++)
     for (int i = 0; i<dimensions; i++)
       contents[j][i] = contents[j][i]();
-  return this;
 }
 
 
@@ -268,10 +266,9 @@ template <class T> matrix<T>& matrix<T>::rotate (T r)
 {
   is_initialised = true;
 
-  contents[0][0] = r.cos (r);  contents[0][1] = -r.sin (r);  contents[0][2] = (T)(0);
-  contents[1][0] = r.sin(r);   contents[1][1] =  r.cos(r);   contents[1][2] = (T)(0);
-  contents[2][0] = (T)(0);     contents[2][1] =  (T)(0);     contents[2][2] = (T)(1);
-  return *this;
+  contents[0][0] = r.cos ();  contents[0][1] = -r.sin ();  contents[0][2] = (T)(0);
+  contents[1][0] = r.sin ();  contents[1][1] =  r.cos ();  contents[1][2] = (T)(0);
+  contents[2][0] = (T)(0);    contents[2][1] =  (T)(0);    contents[2][2] = (T)(1);
 }
 
 

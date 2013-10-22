@@ -53,7 +53,10 @@ main ()
 
     matrix <fract> r;
     fract pi = fract (22, 7);
+    // fract pi = fract (314159, 100000);
     fract ninety = pi/2;
+
+    std::cout << (pi / 6).sin ().ld () << "\n";
 
     r = r.rotate (ninety);
     std::cout << " rotation matrix for 90 degrees is\n" << r << "\n";

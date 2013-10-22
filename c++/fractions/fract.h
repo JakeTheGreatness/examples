@@ -72,10 +72,14 @@ class fract
   fract& operator*= (const fract &right);
   fract& operator*= (int right);
 
-  fract sin (fract radians);
-  fract cos (fract radians);
-
+  fract sin (void);
+  fract cos (void);
   fract power (int);
+
+  float f (void);
+  int i (void);
+  double d (void);
+  long double ld (void);
 };
 
 #endif
