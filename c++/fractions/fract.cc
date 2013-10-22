@@ -933,6 +933,21 @@ fract fract::simplify (void)
 
 
 /*
+ *  operator==  implement comparison.
+ *              pre-condition :  none.
+ *              post-condition:  returns left == right.
+ */
+
+bool operator== (const fract &left, const fract &right)
+{
+  return ((left.positive == right.positive) &&
+	  (left.whole == right.whole) &&
+	  (left.num == right.num) &&
+	  (left.denom == right.denom));
+}
+
+
+/*
  *   operator<<  - shift left (output) operator.
  *                 pre-condition :  an initialised list.
  *                 post-condition:  fraction printed and stream returned.

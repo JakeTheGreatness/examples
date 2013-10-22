@@ -92,4 +92,12 @@ main ()
 
     std::cout << a << " - " << b << " = " << c << "\n";
   }
+
+  {
+    fract a = fract (1, 2);
+
+    std::cout << "testing == and / work\n";
+    assert (a/2 == fract (1, 4));
+    std::cout << "yes\n";
+  }
 }

@@ -72,6 +72,12 @@ class fract
   fract& operator*= (const fract &right);
   fract& operator*= (int right);
 
+  friend bool operator== (const fract &left, const fract &right);
+#if 0
+  friend bool operator== (int right);
+  friend bool operator== (int left, const fract &right);  // friends to bool
+#endif
+
   fract sin (void);
   fract cos (void);
   fract power (int);
