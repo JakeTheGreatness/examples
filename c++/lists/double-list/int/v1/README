@@ -1,0 +1,13 @@
+a double linked list version 1.
+
+Main purpose is to show the advantage of using double linked list.
+
+Two observations:
+
+o   We also see we have a single pointer (head_element) which points to
+    the head of the list.  We obtain the end of the list via:
+    head_element->left.  We need to use the if do while to iterate across
+    the list.
+
+  
+o   We also need to test for head_element == 0 numerous times.

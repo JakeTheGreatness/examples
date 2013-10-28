@@ -1,0 +1,14 @@
+a double linked list version 2.
+
+Main purpose is to show the advantage of using double linked list
+which now has a sentinal element to avoid the frequent test whether
+head_element == 0.  This costs a little extra memory but makes the
+code simpler and faster.
+
+Observation:
+
+o   We still have a single pointer (head_element) which points to
+    the head of the list.  We obtain the end of the list via:
+    head_element->left.  We need to use the if do while to iterate across
+    the list.
+

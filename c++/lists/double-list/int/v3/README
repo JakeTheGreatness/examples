@@ -1,0 +1,7 @@
+a double linked list version 3.
+
+Main purpose is to build upon v2 and address the observation that
+in v2 we had a single head_element pointer which often needed to
+access left.  We add an additional pointer into dlist tail_element.
+
+This is the only change.
