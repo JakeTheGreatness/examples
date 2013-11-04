@@ -67,4 +67,65 @@ main ()
     std::cout << "b = " << b << "\n";
     std::cout << "a = " << a << "\n";
   }
+
+  {
+    sfract a;
+
+    a = sin (pi ());
+    std::cout << "testing a = sin (pi)\n";
+    std::cout << "a = " << a << "\n";
+  }
+
+  {
+    sfract a;
+    sfract b;
+    sfract c;
+
+    a = sfract (1, 2);
+    b = sfract (0);
+
+    std::cout << "a = " << a << "\n";
+    std::cout << "b = " << b << "\n";
+
+    c = a + b ;
+
+    std::cout << "testing c = a + b\n";
+    std::cout << "c = " << c << "\n";
+
+    std::cout << "testing c()\n";
+    c = c();
+    std::cout << "c = " << c << "\n";
+  }
+
+  {
+    sfract a;
+    sfract b;
+    sfract c;
+
+    a = sfract (1, 2);
+    b = sfract (0);
+
+    std::cout << "a = " << a << "\n";
+    std::cout << "b = " << b << "\n";
+
+    c = a + b + 1 + 2 ;
+
+    std::cout << "testing c = a + b + 1 + 2\n";
+    std::cout << "c = " << c << "\n";
+
+    std::cout << "testing c()\n";
+    c = c();
+    std::cout << "c = " << c << "\n";
+  }
+
+  {
+    sfract a;
+    sfract b;
+
+    a = sfract (1, 2);
+    b = -a;
+
+    std::cout << "a = " << a << "\n";
+    std::cout << "b = " << b << "\n";
+  }
 }

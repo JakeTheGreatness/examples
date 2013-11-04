@@ -117,39 +117,40 @@ template <class T> matrix<T>& matrix<T>::operator= (const matrix<T> &from)
 
 template <class T> matrix<T>& matrix<T>::operator* (const matrix<T> &right)
 {
+  matrix left = *this;  // take a copy of ourselves before we change contents
   assert (is_initialised);
   assert (right.is_initialised);
 
   /* 1st row */
-  contents[0][0] = ((contents[0][0] * right.contents[0][0]) +
-		    (contents[0][1] * right.contents[1][0]) +
-		    (contents[0][2] * right.contents[2][0]));
-  contents[0][1] = ((contents[0][0] * right.contents[0][1]) +
-		    (contents[0][1] * right.contents[1][1]) +
-		    (contents[0][2] * right.contents[2][1]));
-  contents[0][2] = ((contents[0][0] * right.contents[0][2]) +
-		    (contents[0][1] * right.contents[1][2]) +
-		    (contents[0][2] * right.contents[2][2]));
+  contents[0][0] = ((left.contents[0][0] * right.contents[0][0]) +
+		    (left.contents[0][1] * right.contents[1][0]) +
+		    (left.contents[0][2] * right.contents[2][0]));
+  contents[0][1] = ((left.contents[0][0] * right.contents[0][1]) +
+		    (left.contents[0][1] * right.contents[1][1]) +
+		    (left.contents[0][2] * right.contents[2][1]));
+  contents[0][2] = ((left.contents[0][0] * right.contents[0][2]) +
+		    (left.contents[0][1] * right.contents[1][2]) +
+		    (left.contents[0][2] * right.contents[2][2]));
   /* 2nd row */
-  contents[1][0] = ((contents[1][0] * right.contents[0][0]) +
-		    (contents[1][1] * right.contents[1][0]) +
-		    (contents[1][2] * right.contents[2][0]));
-  contents[1][1] = ((contents[1][0] * right.contents[0][1]) +
-		    (contents[1][1] * right.contents[1][1]) +
-		    (contents[1][2] * right.contents[2][1]));
-  contents[1][2] = ((contents[1][0] * right.contents[0][2]) +
-		    (contents[1][1] * right.contents[1][2]) +
-		    (contents[1][2] * right.contents[2][2]));
+  contents[1][0] = ((left.contents[1][0] * right.contents[0][0]) +
+		    (left.contents[1][1] * right.contents[1][0]) +
+		    (left.contents[1][2] * right.contents[2][0]));
+  contents[1][1] = ((left.contents[1][0] * right.contents[0][1]) +
+		    (left.contents[1][1] * right.contents[1][1]) +
+		    (left.contents[1][2] * right.contents[2][1]));
+  contents[1][2] = ((left.contents[1][0] * right.contents[0][2]) +
+		    (left.contents[1][1] * right.contents[1][2]) +
+		    (left.contents[1][2] * right.contents[2][2]));
   /* 3rd row */
-  contents[2][0] = ((contents[2][0] * right.contents[0][0]),
-		    (contents[2][1] * right.contents[1][0]),
-		    (contents[2][2] * right.contents[2][0]));
-  contents[2][1] = ((contents[2][0] * right.contents[0][1]),
-		    (contents[2][1] * right.contents[1][1]),
-		    (contents[2][2] * right.contents[2][1]));
-  contents[2][2] = ((contents[2][0] * right.contents[0][2]),
-		    (contents[2][1] * right.contents[1][2]),
-		    (contents[2][2] * right.contents[2][2]));
+  contents[2][0] = ((left.contents[2][0] * right.contents[0][0]),
+		    (left.contents[2][1] * right.contents[1][0]),
+		    (left.contents[2][2] * right.contents[2][0]));
+  contents[2][1] = ((left.contents[2][0] * right.contents[0][1]),
+		    (left.contents[2][1] * right.contents[1][1]),
+		    (left.contents[2][2] * right.contents[2][1]));
+  contents[2][2] = ((left.contents[2][0] * right.contents[0][2]),
+		    (left.contents[2][1] * right.contents[1][2]),
+		    (left.contents[2][2] * right.contents[2][2]));
 }
 
 
