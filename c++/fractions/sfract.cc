@@ -1,9 +1,5 @@
 /*
- *  Copyright (C) 2013 Free Software Foundation, Inc.
- *
- *  introduce the fractional data type.
- *
- *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
+ *  introduce the symbolic fractional data type.
  */
 
 #include <sfract.h>
@@ -404,7 +400,22 @@ bool sfract_data::do_div (void)
 
 bool sfract_data::do_neg (void)
 {
-  return false;
+  bool modified = false;
+
+  /*
+   *  always want to run the rules on the left subtree.
+   *  we might be able to reduce them as well.
+   */
+
+  if (left->do_rules ())
+    modified = true;
+
+  if (left->is_value ())
+    {
+      assign_value (- (left->value));
+      return true;
+    }
+  return modified;
 }
 
 
@@ -428,7 +439,13 @@ bool sfract_data::do_sin (void)
 
 bool sfract_data::do_cos (void)
 {
-  return false;
+  bool modified = left->do_rules ();
+
+  if (map_angle (left, zero (), one ()))
+    return true;
+  if (map_angle (left, pi () / two (), zero ()))
+    return true;
+  return modified;
 }
 
 

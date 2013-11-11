@@ -1,7 +1,7 @@
 /*
  *  Copyright (C) 2013 Free Software Foundation, Inc.
  *
- *  test-slist.cc - test code for the slist.cc module.
+ *  test-dlist.cc - test code for the dlist.cc module.
  *
  *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
  */

@@ -4,7 +4,7 @@ CCFLAGS = -I. -g
 all: sfract
 
 sfract: force
-	g++ $(CCFLAGS) -O0 sfract.cc fract.cc test-sfract.cc
+	g++ $(CCFLAGS) -O0 sfract.cc fract.cc test-sfract.cc gc.cc
 	valgrind ./a.out
 
 fract: force

@@ -59,6 +59,10 @@ main ()
 
     // r = r.rotate (ninety);
     r.rotate (ninety);
+
     std::cout << " rotation matrix for 90 degrees is\n" << r << "\n";
+
+    r();
+    std::cout << " after simplification the rotation matrix for 90 degrees is\n" << r << "\n";
   }
 }

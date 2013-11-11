@@ -1,9 +1,5 @@
 /*
- *  Copyright (C) 2013 Free Software Foundation, Inc.
- *
- *  introduce the fractional data type.
- *
- *  Gaius Mulley <gaius.mulley@southwales.ac.uk>
+ *  introduce the symbolic fractional data type.
  */
 
 #if !defined(SFRACTH)
@@ -41,16 +37,6 @@ class sfract_data
   bool is_rational (void);
   bool is_value (void);
 
-#if 0
-  sfract_data simplify (void);
-  bool is_positive (void);
-  bool is_negative (void);
-  sfract_data inc (sfract_data right);
-  sfract_data dec (sfract_data right);
-  sfract_data negate (void);
-  bool is_zero (void);
-  sfract_data reciprocal (void);
-#endif
  public:
   sfract_data (void);
   ~sfract_data (void);  // destructor
