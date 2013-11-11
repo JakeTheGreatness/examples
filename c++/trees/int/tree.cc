@@ -56,10 +56,8 @@ void tree::delete_element (element *e)
 {
   if (e != 0)
     {
-      if (e->left != 0)
-	delete_element (e->left);
-      if (e->right != 0)
-	delete_element (e->right);
+      delete_element (e->left);
+      delete_element (e->right);
       delete e;
     }
 }
@@ -168,7 +166,6 @@ tree tree::cons (int i, tree l, tree r)
   return cons (i,
 	       duplicate_elements (l.root_element),
 	       duplicate_elements (r.root_element));
-  return *this;
 }
 
 
