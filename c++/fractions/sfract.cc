@@ -59,9 +59,6 @@ sfract_data::sfract_data (fract_type type, sfract_data *l, sfract_data *r)
 
 sfract_data::sfract_data (fract_type type, sfract_data *value)
 {
-  assert (! value->is_value ());
-  assert (! value->is_rational ());
-
   kind = type;
   left = value;
   right = 0;
