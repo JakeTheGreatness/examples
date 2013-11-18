@@ -7,6 +7,7 @@
 
 #include <fract.h>
 #include <iostream>
+#include <gc.h>
 
 typedef enum fract_type_t {value_t, pi_t, e_t, r2_t, r3_t, r6_t,
 			   add_t, sub_t, mult_t, div_t, neg_t, power_t,
@@ -24,6 +25,8 @@ class sfract_data
   fract_type_t kind;
   sfract_data *left;
   sfract_data *right;
+  entity *sfract_data_entity;
+  sfract_data *next_root;
   friend std::ostream& operator<< (std::ostream& os, const sfract_data *d);
   void assign_value (sfract_data *expr);
   void assign_value (fract v);
@@ -64,6 +67,10 @@ class sfract_data
   bool do_tan (void);
   bool do_rules (void);
   void simplify (void);
+
+  void walk_used (void);
+  void root (void);
+  void rooted_used (void);
 };
 
 
@@ -83,8 +90,10 @@ class sfract
   sfract (longcard w);
   sfract (longcard n, longcard d);
   sfract (sfract_data *expr);
-  sfract record (void);
-  sfract unrecord (void);
+  void walk_used (void);
+  void root (void);
+  void unroot (void);
+  void walk_rooted (void);
 
   /* binary + */
   sfract operator+ (const sfract &right);
@@ -142,5 +151,7 @@ sfract r6 (void);
 sfract sin (sfract radians);
 sfract cos (sfract radians);
 sfract tan (sfract radians);
+
+void sfract_garbage_collect (void);
 
 #endif

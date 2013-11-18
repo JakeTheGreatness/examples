@@ -6,12 +6,16 @@
 
 #include <cassert>
 #include <cstdio>
+#include "gc.h"
+
 
 static const bool debugging = false;
 
+void init_gc (void);
+
 
 sfract_data::sfract_data (void)
-  : value(0), kind(value_t), left(0), right(0)
+  : value(0), kind(value_t), left(0), right(0), sfract_data_entity (0)
 {
 }
 
@@ -22,28 +26,28 @@ sfract_data::~sfract_data (void)
 
 
 sfract_data::sfract_data (int whole)
-  : kind(value_t), left(0), right(0)
+  : kind(value_t), left(0), right(0), sfract_data_entity (0)
 {
   value = fract (whole);
 }
 
 
 sfract_data::sfract_data (int num, int denom)
-  : kind(value_t), left(0), right(0)
+  : kind(value_t), left(0), right(0), sfract_data_entity (0)
 {
   value = fract (num, denom);
 }
 
 
 sfract_data::sfract_data (longcard whole)
-  : kind(value_t), left(0), right(0)
+  : kind(value_t), left(0), right(0), sfract_data_entity (0)
 {
   value = fract (whole);
 }
 
 
 sfract_data::sfract_data (longcard num, longcard denom)
-  : kind(value_t), left(0), right(0)
+  : kind(value_t), left(0), right(0), sfract_data_entity (0)
 {
   value = fract (num, denom);
 }
@@ -54,6 +58,7 @@ sfract_data::sfract_data (fract_type type, sfract_data *l, sfract_data *r)
   kind = type;
   left = l;
   right = r;
+  sfract_data_entity = 0;
 }
 
 
@@ -62,11 +67,12 @@ sfract_data::sfract_data (fract_type type, sfract_data *value)
   kind = type;
   left = value;
   right = 0;
+  sfract_data_entity = 0;
 }
 
 
 sfract_data::sfract_data (fract_type type)
-  : kind(type), left(0), right(0)
+  : kind(type), left(0), right(0), sfract_data_entity (0)
 {
 }
 
@@ -101,7 +107,7 @@ sfract_data& sfract_data::operator= (const sfract_data &from)
 
 sfract_data *sfract_data::dup (void)
 {
-  sfract_data *copy = new sfract_data ();
+  sfract_data *copy = new sfract_data;
   copy->value = value;
   copy->kind = kind;
 
@@ -608,6 +614,7 @@ sfract& sfract::operator= (const sfract &from)
 
 sfract::sfract (int value)
 {
+  init_gc ();
   data = new sfract_data (value);
 }
 
@@ -620,6 +627,7 @@ sfract::sfract (int value)
 
 sfract::sfract (int num, int demon)
 {
+  init_gc ();
   data = new sfract_data (num, demon);
 }
 
@@ -632,6 +640,7 @@ sfract::sfract (int num, int demon)
 
 sfract::sfract (longcard whole)
 {
+  init_gc ();
   data = new sfract_data (whole);
 }
 
@@ -644,6 +653,7 @@ sfract::sfract (longcard whole)
 
 sfract::sfract (longcard num, longcard denom)
 {
+  init_gc ();
   data = new sfract_data (num, denom);
 }
 
@@ -651,32 +661,6 @@ sfract::sfract (longcard num, longcard denom)
 sfract::sfract (sfract_data *expr)
 {
   data = expr;
-}
-
-
-/*
- *  record - register the fraction to the garbage collector.
- *           pre-constructor : none.
- *           post-constructor: fraction registered.
- */
-
-sfract sfract::record (void)
-{
-  /* finish register */
-  return *this;
-}
-
-
-/*
- *  unrecord - deregister the fraction to the garbage collector.
- *             pre-constructor : none.
- *             post-constructor: fraction unregistered.
- */
-
-sfract sfract::unrecord (void)
-{
-  /* finish unregister */
-  return *this;
 }
 
 
@@ -963,6 +947,7 @@ sfract sfract::operator- (void)
 
 sfract sfract::pi (void)
 {
+  init_gc ();
   sfract temp;  // we use a temp so we do not trash the calling sfract value
 
   temp.data = new sfract_data (pi_t);
@@ -977,6 +962,7 @@ sfract sfract::pi (void)
 
 sfract sfract::e (void)
 {
+  init_gc ();
   sfract temp;  // we use a temp so we do not trash the calling sfract value
 
   temp.data = new sfract_data (e_t);
@@ -991,6 +977,7 @@ sfract sfract::e (void)
 
 sfract sfract::r2 (void)
 {
+  init_gc ();
   sfract temp;  // we use a temp so we do not trash the calling sfract value
 
   temp.data = new sfract_data (r2_t);
@@ -1005,6 +992,7 @@ sfract sfract::r2 (void)
 
 sfract sfract::r3 (void)
 {
+  init_gc ();
   sfract temp;  // we use a temp so we do not trash the calling sfract value
 
   temp.data = new sfract_data (r3_t);
@@ -1019,6 +1007,7 @@ sfract sfract::r3 (void)
 
 sfract sfract::r6 (void)
 {
+  init_gc ();
   sfract temp;  // we use a temp so we do not trash the calling sfract value
 
   temp.data = new sfract_data (r6_t);
@@ -1250,4 +1239,118 @@ std::ostream& operator<< (std::ostream& os, const sfract &f)
 {
   os << f.data;
   return os;
+}
+
+
+static gc *sfract_data_gc = 0;
+static sfract_data *head_root = 0;
+
+
+void init_gc (void)
+{
+  if (sfract_data_gc == 0)
+    sfract_data_gc = init_garbage (sizeof (sfract_data), __FILE__);
+}
+
+void sfract_data::walk_used (void)
+{
+  if (sfract_data_entity == 0)
+    sfract_data_entity = sfract_data_gc->get_entity (this);
+
+  if (! sfract_data_entity->is_used ())
+    {
+      if (left != 0)
+	left->walk_used ();
+      if (right != 0)
+	right->walk_used ();
+      // mark ourselves last
+      sfract_data_entity->used ();
+    }
+}
+
+
+void sfract::walk_used (void)
+{
+  if (data != 0)
+    data->walk_used ();
+}
+
+
+/*
+ *  root - register the sfract_data as always in use.
+ *         pre-constructor : none.
+ *         post-constructor: sfract_data placed onto root_list.
+ */
+
+void sfract_data::root (void)
+{
+  if (sfract_data_entity == 0)
+    sfract_data_entity = sfract_data_gc->get_entity (this);
+  if (! sfract_data_gc->is_rooted (sfract_data_entity))
+    {
+      next_root = head_root;
+      head_root = this;
+      sfract_data_gc->root (sfract_data_entity);  // and with the garbage collector
+    }
+}
+
+
+/*
+ *  root - register the fraction to the garbage collector.
+ *         pre-constructor : none.
+ *         post-constructor: fraction registered.
+ */
+
+void sfract::root (void)
+{
+  if (data != 0)
+    data->root ();
+}
+
+
+/*
+ *  unroot - deregister the fraction to the garbage collector.
+ *           pre-constructor : none.
+ *           post-constructor: fraction unregistered.
+ */
+
+void sfract::unroot (void)
+{
+  /* finish unroot */
+}
+
+
+void sfract_data::rooted_used (void)
+{
+  walk_used ();
+  if (next_root != 0)
+    next_root->rooted_used ();
+}
+
+
+/*
+ *  sfract_rooted_used - 
+ */
+
+void sfract_rooted_used (void)
+{
+  if (head_root == 0)
+    head_root->rooted_used ();
+}
+
+
+/*
+ *  sfract_garbage_collect - pre-condition :  garbage collector has been initialised.
+ *                                            important sfract have been rooted.
+ *                           post-condition:  any unused sfract objects are returned to
+ *                                            the free list.
+ */
+
+void sfract_garbage_collect (void)
+{
+  sfract_data_gc->stats ();
+  sfract_data_gc->mark_allocated ();
+  sfract_rooted_used ();
+  sfract_data_gc->collect ();
+  sfract_data_gc->stats ();
 }

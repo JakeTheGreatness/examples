@@ -1,10 +1,14 @@
 CCFLAGS = -I. -g
 
 
-all: sfract
+all: sfract test-sin
 
 sfract: force
 	g++ $(CCFLAGS) -O0 sfract.cc fract.cc test-sfract.cc gc.cc
+	valgrind ./a.out
+
+test-sin: force
+	g++ $(CCFLAGS) -O0 sfract.cc fract.cc test-sin.cc gc.cc
 	valgrind ./a.out
 
 fract: force
