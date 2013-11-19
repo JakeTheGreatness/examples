@@ -894,6 +894,9 @@ fract fract::simplify (void)
 {
   longcard d;
 
+  if (num == 0)
+    denom = 0;
+
   if (! top_heavy)
     return *this;
 
@@ -924,9 +927,8 @@ fract fract::simplify (void)
 	  denom = 0;
 	  whole++;
 	}
-      if (num == 0)
-	denom = 0;
     }
+
   *this = not_top_heavy ();
   return *this;
 }

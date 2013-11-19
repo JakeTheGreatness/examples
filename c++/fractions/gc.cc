@@ -268,7 +268,11 @@ void gc::collect (void)
 
 void *operator new (std::size_t bytes)
 {
+#if defined(USE_GC)
   entity *e;
   
   return allocate (bytes, e);
+#else
+  return malloc (bytes);
+#endif
 }

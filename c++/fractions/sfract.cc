@@ -391,7 +391,46 @@ bool sfract_data::do_sub (void)
 
 bool sfract_data::do_mult (void)
 {
-  return false;
+  bool modified = false;
+
+  /*
+   *  always want to run the rules on left and right subtrees.
+   *  we might be able to reduce them as well.
+   */
+
+  if (left->do_rules ())
+    modified = true;
+
+  if (right->do_rules ())
+    modified = true;
+
+  /*
+   *  we check for    (0 * right) -> 0
+   */
+
+  if (are_equal (left, zero ()))
+    {
+      assign_value (zero ());
+      return true;
+    }
+
+  /*
+   *  we check for    (left * 0) -> 0
+   */
+
+  if (are_equal (zero (), right))
+    {
+      assign_value (zero ());
+      return true;
+    }
+
+  if (left->is_value () && right->is_value ())
+    {
+      assign_value (left->value * right->value);
+      return true;
+    }
+
+  return modified;
 }
 
 
@@ -1248,8 +1287,10 @@ static sfract_data *head_root = 0;
 
 void init_gc (void)
 {
+#if defined(USE_GC)
   if (sfract_data_gc == 0)
     sfract_data_gc = init_garbage (sizeof (sfract_data), __FILE__);
+#endif
 }
 
 void sfract_data::walk_used (void)
@@ -1284,6 +1325,7 @@ void sfract::walk_used (void)
 
 void sfract_data::root (void)
 {
+#if defined(USE_GC)
   if (sfract_data_entity == 0)
     sfract_data_entity = sfract_data_gc->get_entity (this);
   if (! sfract_data_gc->is_rooted (sfract_data_entity))
@@ -1292,6 +1334,7 @@ void sfract_data::root (void)
       head_root = this;
       sfract_data_gc->root (sfract_data_entity);  // and with the garbage collector
     }
+#endif
 }
 
 
@@ -1348,9 +1391,11 @@ void sfract_rooted_used (void)
 
 void sfract_garbage_collect (void)
 {
+#if defined(USE_GC)
   sfract_data_gc->stats ();
   sfract_data_gc->mark_allocated ();
   sfract_rooted_used ();
   sfract_data_gc->collect ();
   sfract_data_gc->stats ();
+#endif
 }
