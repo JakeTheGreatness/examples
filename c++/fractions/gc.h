@@ -56,7 +56,6 @@ class gc
   void *allocate (entity *&e);
   void root (entity *e);
   void unroot (entity *e);
-  void *get_data (entity *e);
   gc *find_gc (unsigned int no_bytes);
   entity *get_entity (void *data);
   bool is_rooted (entity *e);

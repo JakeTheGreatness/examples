@@ -1285,6 +1285,11 @@ static gc *sfract_data_gc = 0;
 static sfract_data *head_root = 0;
 
 
+/*
+ *  init_gc - pre-condition :  none.
+ *            post-condition:  garbage collector for sfract_data is created.
+ */
+
 void init_gc (void)
 {
 #if defined(USE_GC)
@@ -1293,22 +1298,38 @@ void init_gc (void)
 #endif
 }
 
+/*
+ *  walk_used - walk complete tree setting every entity belonging to
+ *              a node as used.
+ */
+
 void sfract_data::walk_used (void)
 {
+  /*
+   *  initially our sfract_data_entity will be 0, correct this.
+   *  This is expensive, fortunately we only have to do this once.
+   */
   if (sfract_data_entity == 0)
     sfract_data_entity = sfract_data_gc->get_entity (this);
 
   if (! sfract_data_entity->is_used ())
     {
+      // walk left subtree
       if (left != 0)
 	left->walk_used ();
+      // walk right subtree
       if (right != 0)
 	right->walk_used ();
-      // mark ourselves last
+      // and set ourself as used
       sfract_data_entity->used ();
     }
 }
 
+
+/*
+ *  walk_used - if the sfract has a data component, then
+ *              set this used (and all subtrees).
+ */
 
 void sfract::walk_used (void)
 {
@@ -1392,7 +1413,9 @@ void sfract_rooted_used (void)
 void sfract_garbage_collect (void)
 {
 #if defined(USE_GC)
+  printf ("\nbefore garbage collection\n");
   sfract_data_gc->stats ();
+  printf ("\nafter garbage collection\n");
   sfract_data_gc->mark_allocated ();
   sfract_rooted_used ();
   sfract_data_gc->collect ();

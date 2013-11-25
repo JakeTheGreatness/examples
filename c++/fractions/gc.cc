@@ -16,10 +16,21 @@
 static gc *list_of_gc = 0;
 
 
+/*
+ *  pre-condition :  none.
+ *  post-condition:  entity initialised and set to freed state.
+ */
+
 entity::entity (void)
   : data(0), status(freed), a_next(0), r_next(0), f_next(0)
 {
 }
+
+
+/*
+ *  pre-condition :  none.
+ *  post-condition:  none.
+ */
 
 entity::~entity (void)
 {
@@ -61,12 +72,21 @@ entity& entity::operator= (const entity &from)  // assignment
 }
 
 
+/*
+ *  do_assert:  pre-condition :  entity is not in an error state.
+ *              post-condition:  none.
+ */
 
 void entity::do_assert (void)
 {
   assert ((status & in_error) == 0);
 }
 
+
+/*
+ *  unmark - pre-condition :  none.
+ *           post-confition:  mark flag is removed.
+ */
 
 void entity::unmark (void)
 {
@@ -76,12 +96,22 @@ void entity::unmark (void)
 }
 
 
+/*
+ *  mark - pre-condition :  none.
+ *         post-confition:  mark flag is set.
+ */
+
 void entity::mark (void)
 {
   do_assert ();
   status = static_cast <state> (static_cast <unsigned int> (status) | static_cast <unsigned int> (marked));
 }
 
+
+/*
+ *  is_marked - pre-condition :  none.
+ *              post-confition:  return true if entity is marked.
+ */
 
 bool entity::is_marked (void)
 {
@@ -90,12 +120,22 @@ bool entity::is_marked (void)
 }
 
 
+/*
+ *  free - pre-condition :  none.
+ *         post-confition:  free flag is set.
+ */
+
 void entity::free (void)
 {
   do_assert ();
   status = static_cast <state> (static_cast <unsigned int> (status) | static_cast <unsigned int> (freed));
 }
 
+
+/*
+ *  unfree - pre-condition :  none.
+ *           post-confition:  free flag is removed.
+ */
 
 void entity::unfree (void)
 {
@@ -105,6 +145,11 @@ void entity::unfree (void)
 }
 
 
+/*
+ *  is_free - pre-condition :  none.
+ *            post-confition:  return true if entity is free.
+ */
+
 bool entity::is_free (void)
 {
   do_assert ();
@@ -112,12 +157,22 @@ bool entity::is_free (void)
 }
 
 
+/*
+ *  used - pre-condition :  none.
+ *         post-confition:  used flag is set.
+ */
+
 void entity::used (void)
 {
   do_assert ();
   status = static_cast <state> (static_cast <unsigned int> (status) | static_cast <unsigned int> (in_use));
 }
 
+
+/*
+ *  unused - pre-condition :  none.
+ *           post-confition:  used flag is removed.
+ */
 
 void entity::unused (void)
 {
@@ -127,12 +182,24 @@ void entity::unused (void)
 }
 
 
+/*
+ *  is_used - pre-condition :  none.
+ *            post-confition:  return true if entity is used.
+ */
+
 bool entity::is_used (void)
 {
   do_assert ();
   return (status & in_use) != 0;
 }
 
+
+/*
+ *  pre-condition :  none.
+ *  post-condition:  construct garbage collector class.
+ *                   It chains this garbage collector onto the list
+ *                   of created garbage collectors.
+ */
 
 gc::gc (int no_of_bytes, const char *description)
   : rooted(0), allocated(0), bytes(no_of_bytes), free_list(0)
@@ -142,11 +209,27 @@ gc::gc (int no_of_bytes, const char *description)
 }
 
 
+/*
+ *  pre-condition :  none.
+ *  post-condition:  gc is taken off the list_of_gc's
+ *                   all entities and their contents are freed.
+ */
+
 gc::~gc ()
 {
   // to do
 }
 
+
+/*
+ *  allocate - pre-condition :  none.
+ *             post-condition:  will return an entity from the
+ *                              freelist (if one is present).
+ *                              Otherwise it creates a new entity
+ *                              and mallocs memory and assigns it
+ *                              to the entities data field.
+ *                              The entity is set 'in_use'.
+ */
 
 void *gc::allocate (entity *&e)
 {
@@ -154,11 +237,24 @@ void *gc::allocate (entity *&e)
 }
 
 
+/*
+ *  unroot - pre-condition :  e was created via allocate.
+ *           post-condition:  e is removed from the rooted list.
+ */
+
 void gc::unroot (entity *e)
 {
   // to do
 }
 
+
+/*
+ *  find_gc - pre-condition :  none.
+ *            post-condition:  returns a previously created garbage
+ *                             collector object which manages heaps of
+ *                             no_bytes in size.  It returns 0 if no
+ *                             garbage collector is found.
+ */
 
 gc *gc::find_gc (unsigned int no_bytes)
 {
@@ -199,11 +295,23 @@ gc *init_garbage (unsigned int bytes, const char *description)
 }
 
 
+/*
+ *  get_entity - pre-condition :  data must have been created by
+ *                                a call to new below.
+ *               post-condition:  returns the entity associated with
+ *                                data.
+ */
+
 entity *gc::get_entity (void *data)
 {
   // to do
 }
 
+
+/*
+ *  is_rooted - pre-condition :  e has been created by a call to allocate.
+ *              post-condition:  returns true if entity, e, has been rooted.
+ */
 
 bool gc::is_rooted (entity *e)
 {
@@ -211,11 +319,23 @@ bool gc::is_rooted (entity *e)
 }
 
 
+/*
+ *  root - pre-condition :  e has been create by a call to allocate.
+ *         post-condition:  e is added to the rooted list.
+ *                          e is removed from the allocated list.
+ */
+
 void gc::root (entity *e)
 {
   // to do
 }
 
+
+/*
+ *  no_of_allocated - pre-condition :  none.
+ *                    post-condition:  returns the number of entities
+ *                                     on the allocated list.
+ */
 
 int gc::no_of_allocated (void)
 {
@@ -223,17 +343,34 @@ int gc::no_of_allocated (void)
 }
 
 
+/*
+ *  no_of_freed - pre-condition :  none.
+ *                post-condition:  returns the number of entities
+ *                                 on the free_list.
+ */
+
 int gc::no_of_freed (void)
 {
   // to do
 }
 
 
+/*
+ *  no_of_rooted - pre-condition :  none.
+ *                 post-condition:  returns the number of entities
+ *                                  on the rooted list.
+ */
+
 int gc::no_of_rooted (void)
 {
   // to do
 }
 
+
+/*
+ *  stats - pre-condition :  none.
+ *          post-condition:  prints some interesting statistics.
+ */
 
 void gc::stats (void)
 {
@@ -265,6 +402,11 @@ void gc::collect (void)
   // to do
 }
 
+
+/*
+ *  new - pre-condition :  none  (a garbage collector has been created).
+ *        post-condition:  a pointer to at least, bytes, spare memory is returned.
+ */
 
 void *operator new (std::size_t bytes)
 {
