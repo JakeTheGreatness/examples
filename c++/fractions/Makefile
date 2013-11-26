@@ -38,4 +38,24 @@ opt: force
 clean: force
 	$(RM) *.o a.out *~
 
+decrypt: force
+	@if [ -f gc.cc.sol.gpg ] ; then \
+	   rm gc.cc.sol ; \
+	   gpg -d gc.cc.sol.gpg > gc.cc.sol ; \
+        else \
+           echo "no gc.cc.sol.gpg file found" ; \
+        fi
+
+encrypt: force
+	@if [ -f gc.cc.sol ] ; then \
+           rm gc.cc.sol.gpg ; \
+	   if gpg -c gc.cc.sol ; then \
+              rm gc.cc.sol ; \
+           else \
+              echo "warning encrypt failed" ; \
+           fi ; \
+        else \
+           echo "no gc.cc.sol file found" ; \
+        fi
+
 force:
