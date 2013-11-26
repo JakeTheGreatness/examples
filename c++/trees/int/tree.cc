@@ -13,6 +13,9 @@
 const bool debugging = false;
 
 
+#define FUNCTIONAL
+
+
 static int max (int a, int b)
 {
   if (a > b)
@@ -145,12 +148,14 @@ bool tree::is_empty (void)
 
 tree tree::cons (int i, element *l, element *r)
 {
-  root_element = new element;
+  tree *t = new tree;
 
-  root_element->data = i;
-  root_element->left = l;
-  root_element->right = r;
-  return *this;
+  t->root_element = new element;
+
+  t->root_element->data = i;
+  t->root_element->left = l;
+  t->root_element->right = r;
+  return *t;
 }
 
 
@@ -240,6 +245,49 @@ int tree::no_of_items (void)
 }
 
 
+tree tree::left (void)
+{
+  if (root_element == 0)
+    return empty ();
+  if (root_element->left == 0)
+    return empty ();
+  return cons (root_element->left->data,
+	       duplicate_elements (root_element->left->left),
+	       duplicate_elements (root_element->left->right));
+}
+
+tree tree::right (void)
+{
+  if (root_element == 0)
+    return empty ();
+  if (root_element->right == 0)
+    return empty ();
+  return cons (root_element->right->data,
+	       duplicate_elements (root_element->right->left),
+	       duplicate_elements (root_element->right->right));
+}
+
+#if defined(FUNCTIONAL)
+
+tree tree::insert (int i)
+{
+  if (is_empty ())
+    return cons (i, empty (), empty ());
+  else
+    return insert_non_empty (i);
+}
+
+tree tree::insert_non_empty (int i)
+{
+  if (i == root ())
+    return cons (i, left (), right ());
+  else if (i < root ())
+    return cons (root (), left ().insert (i), right ());
+  else
+    return cons (root (), left (), right ().insert (i));
+}
+
+#else
 /*
  *  insert - places, i, into the tree in the correct place.
  *           pre-condition :  none.
@@ -265,7 +313,6 @@ void tree::insert (element **e, int i)
     }
 }
 
-
 /*
  *  insert - places, i, into the tree in the correct place.
  *           pre-condition :  none.
@@ -280,6 +327,51 @@ tree tree::insert (int i)
   else
     insert (&root_element, i);
   return *this;
+}
+#endif
+
+
+/*
+ *  minv - return the smallest value in the tree.
+ */
+
+int tree::minv (void)
+{
+  if (left ().is_empty ())
+    return root ();
+  else
+    return left ().minv ();
+}
+
+
+/*
+ *  maxv - return the largest value in the tree.
+ */
+
+int tree::maxv (void)
+{
+  if (right ().is_empty ())
+    return root ();
+  else
+    return right ().maxv ();
+}
+
+
+tree tree::remove (int i)
+{
+  if (is_empty ())
+    return empty ();
+  if ((root () == i) && right ().is_empty ())
+    return left ();
+  if ((root () == i) && left ().is_empty ())
+    return right ();
+  if (root () == i)
+    return cons (right ().minv (), left (), right().remove (right ().minv ()));
+  
+  if (i < root ())
+    return cons (root (), left ().remove (i), right ());
+  else
+    return cons (root (), left (), right ().remove (i));
 }
 
 

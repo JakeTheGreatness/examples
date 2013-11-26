@@ -56,6 +56,12 @@ class tree
   int  height (void);
   int  no_of_items (void);
   tree insert (int i);
+  tree right (void);
+  tree left (void);
+  tree insert_non_empty (int i);
+  tree remove (int i);
+  int minv (void);
+  int maxv (void);
 };
 
 #endif

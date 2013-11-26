@@ -22,6 +22,12 @@ main ()
 
   two_pi.root ();
 
+  s = sfract (1, 2);
+  v = s - s;
+  std::cout << "v = " << v << "\n";
+  v = v();
+  std::cout << "v = " << v << "\n";
+
   for (i = 0; i<360; i += 15)
     {
       s = sfract (i, 360);

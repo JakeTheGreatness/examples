@@ -31,9 +31,11 @@ class sfract_data
   void assign_value (sfract_data *expr);
   void assign_value (fract v);
   void assign_value (sfract expr);
-  void assign (sfract expr);
   void assign_binary (sfract expr);
   void assign_unary (sfract expr);
+
+  void assign (sfract expr);
+  void assign (fract expr);
   bool are_equal (sfract_data *l, sfract_data *r);
   bool are_equal (sfract l, sfract_data *r);
   bool are_equal (sfract_data *l, sfract r);
@@ -53,6 +55,7 @@ class sfract_data
   sfract_data (const sfract_data &from);  // copy
   sfract_data& operator= (const sfract_data &from);  // assignment
   sfract_data (sfract_data *d);
+  sfract_data *build_neg (sfract_data *e);
 
   bool map_angle (sfract_data *angle, sfract value, sfract result);
   sfract_data *dup (void);
@@ -90,6 +93,7 @@ class sfract
   sfract (longcard w);
   sfract (longcard n, longcard d);
   sfract (sfract_data *expr);
+
   void walk_used (void);
   void root (void);
   void unroot (void);

@@ -100,6 +100,21 @@ sfract_data& sfract_data::operator= (const sfract_data &from)
 
 
 /*
+ *  build_neg - wraps up a neg_t expression.
+ *              pre-condition :  e is a sfract_data expression.
+ *              post-condition:  a sfract_data expression is returned
+ *                               which represents (-e).
+ *                               Note e is duplicated and the duplicate
+ *                               value is used.
+ */
+
+sfract_data *sfract_data::build_neg (sfract_data *e)
+{
+  return new sfract_data (neg_t, e->dup ());
+}
+
+
+/*
  *  dup - duplicate entire tree.
  *        pre-condition : none.
  *        post-condition: complete tree duplicated and returned.
@@ -270,6 +285,7 @@ void sfract_data::assign_unary (sfract expr)
 }
 
 
+
 void sfract_data::assign (sfract expr)
 {
   switch (expr.data->kind)
@@ -301,6 +317,23 @@ void sfract_data::assign (sfract expr)
       assert (false);
     }
 }
+
+/*
+ *  assign - another version of assign, which allows expr to be a fract,
+ *           rather than a sfract.
+ */
+
+void sfract_data::assign (fract expr)
+{
+  value = expr;
+  kind = value_t;
+}
+
+
+/*
+ *  assign - should be used below here - no references to assign_value or assign_binary
+ *           or assign_unary should be used.
+ */
 
 
 /*
@@ -357,7 +390,7 @@ bool sfract_data::do_add (void)
 
   if (are_equal (left, zero ()))
     {
-      assign_value (right);
+      assign (right);
       return true;
     }
 
@@ -367,13 +400,13 @@ bool sfract_data::do_add (void)
 
   if (are_equal (zero (), right))
     {
-      assign_value (left);
+      assign (left);
       return true;
     }
 
   if (left->is_value () && right->is_value ())
     {
-      assign_value (left->value + right->value);
+      assign (left->value + right->value);
       return true;
     }
 
@@ -383,9 +416,66 @@ bool sfract_data::do_add (void)
 }
 
 
+/*
+ *  do_sub - handle rules such as:
+ *           x - x   ->  0
+ *           x - 0   ->  x
+ *           0 - x   -> (-x)
+ *           2 - 1   ->  1
+ */
+
 bool sfract_data::do_sub (void)
 {
-  return false;
+  bool modified = false;
+
+  /*
+   *  always want to run the rules on left and right subtrees.
+   *  we might be able to reduce them as well.
+   */
+
+  if (left->do_rules ())
+    modified = true;
+
+  if (right->do_rules ())
+    modified = true;
+
+  /*
+   *  we check for    (left == right) -> 0
+   */
+
+  if (are_equal (left, right))
+    {
+      assign (zero ());
+      return true;
+    }
+
+  /*
+   *  we check for    (0 - right) -> (-right)
+   */
+
+  if (are_equal (left, zero ()))
+    {
+      assign (sfract (build_neg (right)));
+      return true;
+    }
+
+  /*
+   *  we check for    (left - 0) -> left
+   */
+
+  if (are_equal (zero (), right))
+    {
+      assign (left);
+      return true;
+    }
+
+  if (left->is_value () && right->is_value ())
+    {
+      assign (left->value - right->value);
+      return true;
+    }
+
+  return modified;
 }
 
 
@@ -410,7 +500,7 @@ bool sfract_data::do_mult (void)
 
   if (are_equal (left, zero ()))
     {
-      assign_value (zero ());
+      assign (zero ());
       return true;
     }
 
@@ -420,13 +510,13 @@ bool sfract_data::do_mult (void)
 
   if (are_equal (zero (), right))
     {
-      assign_value (zero ());
+      assign (zero ());
       return true;
     }
 
   if (left->is_value () && right->is_value ())
     {
-      assign_value (left->value * right->value);
+      assign (left->value * right->value);
       return true;
     }
 
@@ -454,7 +544,7 @@ bool sfract_data::do_neg (void)
 
   if (left->is_value ())
     {
-      assign_value (- (left->value));
+      assign (- (left->value));
       return true;
     }
   return modified;
@@ -973,7 +1063,7 @@ sfract sfract::operator- (void)
    */
   sfract copy;
 
-  copy.data = new sfract_data (neg_t, this->data->dup ());
+  copy.data = this->data->build_neg (this->data);
   return copy;
 }
 
