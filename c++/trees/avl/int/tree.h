@@ -66,6 +66,7 @@ class tree
   tree rotate_right (void);
   tree rotate_left (void);
   tree balanced (void);
+  tree do_remove (int i);
 };
 
 #endif

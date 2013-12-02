@@ -392,6 +392,11 @@ int tree::maxv (void)
 
 tree tree::remove (int i)
 {
+  return do_remove (i).balance ();
+}
+
+tree tree::do_remove (int i)
+{
   if (is_empty ())
     return empty ();
   if ((root () == i) && right ().is_empty ())

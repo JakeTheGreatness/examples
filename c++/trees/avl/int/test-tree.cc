@@ -105,6 +105,11 @@ main ()
 	t = t.insert (i);
 	std::cout << t << " its height is " << t.height () << "\n";
       }
+    for (i = 1; i<33; i++)
+      {
+	t = t.remove (i);
+	std::cout << t << " its height is " << t.height () << "\n";
+      }
   }
 }
 
