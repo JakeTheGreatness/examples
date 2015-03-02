@@ -31,7 +31,7 @@ main ()
   for (i = 0; i<360; i += 15)
     {
       s = sfract (i, 360);
-      radians = (s * 2) * pi ();
+      radians = (s * 2) * pi (); // two_pi;
       v = sin (radians);
       std::cout << "sin (" << i << " degrees) can be expressed as " << v;
       v = v();
