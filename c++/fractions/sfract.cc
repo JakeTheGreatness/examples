@@ -346,6 +346,8 @@ void sfract_data::assign (fract expr)
 
 bool sfract_data::map_angle (sfract_data *angle, sfract value, sfract result)
 {
+  angle->do_rules ();
+  value.data->do_rules ();
   if (are_equal (angle, value))
     {
       assign (result);
@@ -514,6 +516,25 @@ bool sfract_data::do_mult (void)
       return true;
     }
 
+  /*
+   *  we check for    (1 * right) -> right
+   */
+
+  if (are_equal (left, one ()))
+    {
+      assign (right);
+      return true;
+    }
+
+  /*
+   *  we check for    (left * 1) -> left
+   */
+
+  if (are_equal (one (), right))
+    {
+      assign (left);
+      return true;
+    }
   if (left->is_value () && right->is_value ())
     {
       assign (left->value * right->value);
@@ -526,7 +547,34 @@ bool sfract_data::do_mult (void)
 
 bool sfract_data::do_div (void)
 {
-  return false;
+  bool modified = false;
+
+  /*
+   *  always want to run the rules on left and right subtrees.
+   *  we might be able to reduce them as well.
+   */
+
+  if (left->do_rules ())
+    modified = true;
+
+  if (right->do_rules ())
+    modified = true;
+
+  if (left->is_value ())
+    {
+      left->value.reciprocal ();
+      assign (sfract (left) * sfract (right));
+      return true;
+    }
+
+  if (right->is_value ())
+    {
+      right->value.reciprocal ();
+      assign (sfract (left) * sfract (right));
+      return true;
+    }
+
+  return modified;
 }
 
 
@@ -561,10 +609,24 @@ bool sfract_data::do_sin (void)
 {
   bool modified = left->do_rules ();
 
+#if 1
   if (map_angle (left, zero (), zero ()))
     return true;
-  if (map_angle (left, pi () / two (), one ()))
+  if (map_angle (left, pi () * half (), one ()))
     return true;
+
+  // the divides cannot be used 
+  if (map_angle (left, pi () / 4, r2 () / 2))
+    return true;
+  if (map_angle (left, pi () / 3, r3 () / 2))
+    return true;
+
+  // so we must use multiply
+  if (map_angle (left, pi () * sfract (1, 4), r2 () / 2))
+    return true;
+  if (map_angle (left, pi () * sfract (1, 3), r3 () / 2))
+    return true;
+#endif
   return modified;
 }
 

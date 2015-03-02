@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#define ENABLE_COLLECT
+
 
 /*
  *  here we record all the garbage collectors created.
@@ -51,7 +53,11 @@ entity::~entity (void)
 
 entity::entity (const entity &from)  // copy
 {
-  // to do
+  data = 0;
+  status = in_error;
+  a_next = 0;
+  r_next = 0;
+  f_next = 0;
 }
 
 
@@ -68,7 +74,11 @@ entity::entity (const entity &from)  // copy
 
 entity& entity::operator= (const entity &from)  // assignment
 {
-  // to do
+  data = 0;
+  status = in_error;
+  a_next = 0;
+  r_next = 0;
+  f_next = 0;
 }
 
 
@@ -217,7 +227,7 @@ gc::gc (int no_of_bytes, const char *description)
 
 gc::~gc ()
 {
-  // to do
+  // not done yet
 }
 
 
@@ -233,7 +243,29 @@ gc::~gc ()
 
 void *gc::allocate (entity *&e)
 {
-  // to do
+  if (free_list == 0)
+    {
+      /*
+       *  free list empty, malloc data
+       */
+      e = new entity;
+
+      e->data = malloc (bytes);
+      e->a_next = allocated;
+      allocated = e;
+      e->r_next = 0;
+      e->f_next = 0;
+    }
+  else
+    {
+      e = free_list;
+      free_list = free_list->f_next;
+      assert (e->r_next == 0);
+      e->f_next = 0;
+    }
+  e->status = in_use;
+  printf ("allocated entity at 0x%x, it is now in_use\n", e);
+  return e->data;
 }
 
 
@@ -258,7 +290,16 @@ void gc::unroot (entity *e)
 
 gc *gc::find_gc (unsigned int no_bytes)
 {
-  // to do
+  gc *g = list_of_gc;
+
+  while (g != 0)
+    {
+      if (g->bytes == no_bytes)
+	return g;
+      else
+	g = g->next;
+    }
+  return 0;
 }
 
 
@@ -268,7 +309,7 @@ gc *gc::find_gc (unsigned int no_bytes)
 
 void garbage_collect (void)
 {
-  // to do
+  list_of_gc->collect ();
 }
 
 
@@ -279,7 +320,15 @@ void garbage_collect (void)
 
 void *allocate (unsigned int bytes, entity *&e)
 {
-  // to do
+  if ((bytes == sizeof (entity)) || (bytes == sizeof (gc)))
+    return malloc (bytes);
+
+  gc *g = list_of_gc->find_gc (bytes);
+
+  if (g == 0)
+    return malloc (bytes);   // no garbage collector initialised yet
+  else
+    return g->allocate (e);
 }
 
 
@@ -291,7 +340,17 @@ void *allocate (unsigned int bytes, entity *&e)
 
 gc *init_garbage (unsigned int bytes, const char *description)
 {
-  // to do
+  gc *g = list_of_gc;
+
+  if (g != 0)
+    g = g->find_gc (bytes);
+
+  if (g == 0)
+    {
+      g = new gc (bytes, description);
+      list_of_gc = g;
+    }
+  return g;
 }
 
 
@@ -304,7 +363,15 @@ gc *init_garbage (unsigned int bytes, const char *description)
 
 entity *gc::get_entity (void *data)
 {
-  // to do
+  entity *e = allocated;
+
+  while (e != 0)
+    {
+      if (e->data == data)
+	return e;
+      e = e->a_next;
+    }
+  return 0;
 }
 
 
@@ -315,7 +382,15 @@ entity *gc::get_entity (void *data)
 
 bool gc::is_rooted (entity *e)
 {
-  // to do
+  entity *r = rooted;
+
+  while (r != 0)
+    {
+      if (r == e)
+	return true;
+      r = r->r_next;
+    }
+  return false;
 }
 
 
@@ -327,7 +402,31 @@ bool gc::is_rooted (entity *e)
 
 void gc::root (entity *e)
 {
-  // to do
+  if (! is_rooted (e))
+    {
+      e->r_next = rooted;
+      rooted = e;
+      /*
+       *   remove it from the allocated list
+       */
+      entity *a = allocated;
+      
+      if (allocated == e)
+	allocated = e->a_next;
+      else
+	{
+	  while (a->a_next != 0)
+	    {
+	      if (a->a_next == e)
+		{
+		  a->a_next = e->a_next;
+		  return;
+		}
+	      else
+		a = a->a_next;
+	    }
+	}
+    }
 }
 
 
@@ -339,7 +438,15 @@ void gc::root (entity *e)
 
 int gc::no_of_allocated (void)
 {
-  // to do
+  int n = 0;
+  entity *e = allocated;
+
+  while (e != 0)
+    {
+      e = e->a_next;
+      n++;
+    }
+  return n;
 }
 
 
@@ -351,7 +458,15 @@ int gc::no_of_allocated (void)
 
 int gc::no_of_freed (void)
 {
-  // to do
+  int n = 0;
+  entity *e = free_list;
+
+  while (e != 0)
+    {
+      e = e->f_next;
+      n++;
+    }
+  return n;
 }
 
 
@@ -363,7 +478,15 @@ int gc::no_of_freed (void)
 
 int gc::no_of_rooted (void)
 {
-  // to do
+  int n = 0;
+  entity *e = rooted;
+
+  while (e != 0)
+    {
+      e = e->r_next;
+      n++;
+    }
+  return n;
 }
 
 
@@ -374,7 +497,16 @@ int gc::no_of_rooted (void)
 
 void gc::stats (void)
 {
-  // to do
+  int a, f, r;
+
+  a = no_of_allocated ();
+  f = no_of_freed ();
+  r = no_of_rooted ();
+  printf ("stats for %s garbage collection\n", desc);
+  printf ("total number of entities %d\n", a+f+r);
+  printf ("number of allocated entities %d\n", a);
+  printf ("number of free entities %d\n", f);
+  printf ("number of rooted entities %d\n", r);
 }
 
 
@@ -386,7 +518,14 @@ void gc::stats (void)
 
 void gc::mark_allocated (void)
 {
-  // to do
+  entity *e = allocated;
+  
+  while (e != 0)
+    {
+      e->mark ();
+      e->unused ();
+      e = e->a_next;
+    }
 }
 
 
@@ -399,7 +538,27 @@ void gc::mark_allocated (void)
 
 void gc::collect (void)
 {
-  // to do
+  entity *e = allocated;
+
+  while (e != 0)
+    {
+      if (! e->is_used ())
+	{
+#if defined(ENABLE_COLLECT)
+	  if (e->f_next == 0)
+	    printf ("entity already on the free list at 0x%x (leaving it alone)\n", e);
+          else
+	    {
+	      printf ("seen an unused entity at 0x%x, moving it into the free list\n", e);
+	      e->f_next = free_list;
+	      free_list = e;
+	    }
+#endif
+	}
+      e = e->a_next;
+    }
+  if (next != 0)
+    next->collect ();
 }
 
 
@@ -410,11 +569,7 @@ void gc::collect (void)
 
 void *operator new (std::size_t bytes)
 {
-#if defined(USE_GC)
   entity *e;
   
   return allocate (bytes, e);
-#else
-  return malloc (bytes);
-#endif
 }

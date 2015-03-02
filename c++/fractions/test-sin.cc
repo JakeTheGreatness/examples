@@ -31,11 +31,12 @@ main ()
   for (i = 0; i<360; i += 15)
     {
       s = sfract (i, 360);
-      radians = s * two_pi;
+      radians = (s * 2) * pi ();
       v = sin (radians);
       std::cout << "sin (" << i << " degrees) can be expressed as " << v;
       v = v();
       std::cout << " and also " << v << "\n";
+      sfract_garbage_collect ();
       sfract_garbage_collect ();
     }
 }

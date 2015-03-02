@@ -1,7 +1,7 @@
 CCFLAGS = -I. -g
 
 
-all: sfract test-sin sfract-gc test-sin-gc
+all: sfract test-sin # sfract-gc test-sin-gc
 
 sfract: force
 	@echo "test sfract values"

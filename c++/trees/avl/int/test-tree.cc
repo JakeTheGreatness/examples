@@ -109,6 +109,7 @@ main ()
       {
 	t = t.remove (i);
 	std::cout << t << " its height is " << t.height () << "\n";
+	t.balanced ();
       }
   }
 }
