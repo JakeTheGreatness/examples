@@ -1,0 +1,5 @@
+This is a proof of concept selection of modules which allow for placement
+of card and for the cards to be split and combined into piles.
+
+At the time of writing the joining of piles code contains a bug, but
+I'm releasing the code as is since it may be useful.
